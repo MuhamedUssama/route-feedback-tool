@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
@@ -27,6 +28,11 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(Failure.server(e.message, statusCode: e.statusCode));
     } on CacheException catch (e) {
       return Left(Failure.cache(e.message));
+    } on TypeError catch (e, stackTrace) {
+      if (kDebugMode) {
+        print("❌ Parsing Error: $e \nStack: $stackTrace");
+      }
+      return const Left(Failure.server('Unable to process user data'));
     } catch (e) {
       return Left(Failure.unexpected(e.toString()));
     }

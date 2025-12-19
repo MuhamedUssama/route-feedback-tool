@@ -25,6 +25,7 @@ import '../../features/auth/domain/usecases/get_cached_user_usecase.dart'
 import '../../features/auth/domain/usecases/login_with_google_usecase.dart'
     as _i57;
 import '../../features/auth/domain/usecases/logout_usecase.dart' as _i48;
+import '../../features/auth/presentation/cubit/auth_cubit.dart' as _i117;
 import '../network/google_auth_client.dart' as _i527;
 import '../services/shared_prefs_service.dart' as _i816;
 import 'register_module.dart' as _i291;
@@ -65,6 +66,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i48.LogoutUseCase>(
       () => _i48.LogoutUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i117.AuthCubit>(
+      () => _i117.AuthCubit(gh<_i57.LoginWithGoogleUseCase>()),
     );
     return this;
   }

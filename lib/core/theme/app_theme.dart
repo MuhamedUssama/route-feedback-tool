@@ -165,6 +165,9 @@ abstract class AppTheme {
           textStyle: WidgetStateProperty.all(
             GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
           ),
+          minimumSize: WidgetStateProperty.all(
+            const Size(double.infinity, 50),
+          ), // Standard height
         ),
       ),
 
@@ -223,6 +226,16 @@ abstract class AppTheme {
         color: isDark ? Colors.grey[800] : Colors.grey[200],
         thickness: 1,
         space: 1,
+      ),
+
+      // SnackBar
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: isDark ? _surfaceDark : _textPrimaryLight,
+        contentTextStyle: GoogleFonts.inter(
+          color: isDark ? Colors.white : Colors.white,
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
 
       // Platform Density

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/errors/auth_error_type.dart';
 import '../../../../core/errors/exceptions.dart';
@@ -33,12 +34,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
+        // Log Raw JSON for debugging
+        if (kDebugMode) {
+          print("🔍 Google User Info Raw JSON: ${response.body}");
+        }
+
         final json = jsonDecode(response.body) as Map<String, dynamic>;
 
         return UserModel(
           id: json['sub'] as String,
           email: json['email'] as String,
-          displayName: json['name'] as String,
+          displayName:
+              json['name'] as String? ??
+              (json['email'] as String).split('@')[0],
           photoUrl: json['picture'] as String?,
           accessToken: '',
         );

@@ -13,6 +13,8 @@ import 'package:url_launcher/url_launcher.dart';
 class GoogleAuthClient {
   static const List<String> _scopes = [
     'email',
+    'profile',
+    'openid',
     SheetsApi.spreadsheetsScope,
     GmailApi.gmailSendScope,
   ];
