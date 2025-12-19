@@ -1,0 +1,57 @@
+import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
+import '../../../../core/errors/exceptions.dart';
+import '../../../../core/errors/failures.dart';
+import '../../domain/entities/user_entity.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../datasources/auth_local_data_source.dart';
+import '../datasources/auth_remote_data_source.dart';
+import '../models/user_model.dart';
+
+@LazySingleton(as: AuthRepository)
+class AuthRepositoryImpl implements AuthRepository {
+  final AuthRemoteDataSource _remoteDataSource;
+  final AuthLocalDataSource _localDataSource;
+
+  AuthRepositoryImpl(this._remoteDataSource, this._localDataSource);
+
+  @override
+  Future<Either<Failure, UserEntity>> loginWithGoogle() async {
+    try {
+      final UserModel userModel = await _remoteDataSource.loginWithGoogle();
+      await _localDataSource.cacheUser(userModel);
+      return Right(userModel);
+    } on GoogleAuthException catch (e) {
+      return Left(Failure.auth(e.message, e.type));
+    } on ServerException catch (e) {
+      return Left(Failure.server(e.message, statusCode: e.statusCode));
+    } on CacheException catch (e) {
+      return Left(Failure.cache(e.message));
+    } catch (e) {
+      return Left(Failure.unexpected(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> logout() async {
+    try {
+      await _remoteDataSource.signOut();
+      await _localDataSource.clearUserCache();
+      return const Right(null);
+    } catch (e) {
+      return Left(Failure.unexpected(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity?>> getCachedUser() async {
+    try {
+      final userModel = await _localDataSource.getCachedUser();
+      return Right(userModel);
+    } on CacheException catch (e) {
+      return Left(Failure.cache(e.message));
+    } catch (e) {
+      return Left(Failure.unexpected(e.toString()));
+    }
+  }
+}
