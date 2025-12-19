@@ -13,6 +13,8 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
+import '../network/google_auth_client.dart' as _i527;
+import '../services/shared_prefs_service.dart' as _i816;
 import 'register_module.dart' as _i291;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -26,6 +28,10 @@ extension GetItInjectableX on _i174.GetIt {
     await gh.factoryAsync<_i460.SharedPreferences>(
       () => registerModule.prefs,
       preResolve: true,
+    );
+    gh.lazySingleton<_i527.GoogleAuthClient>(() => _i527.GoogleAuthClient());
+    gh.lazySingleton<_i816.SharedPrefsService>(
+      () => _i816.SharedPrefsService(gh<_i460.SharedPreferences>()),
     );
     return this;
   }
