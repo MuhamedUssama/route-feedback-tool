@@ -56,7 +56,10 @@ class GoogleAuthClient {
   // ================== Windows Logic (Browser Flow) ==================
   Future<http.Client?> _signInWindows() async {
     try {
-      final clientId = ClientId(dotenv.env['WindowsClientId']!, null);
+      final clientId = ClientId(
+        dotenv.env['WindowsClientId']!,
+        dotenv.env['WindowsClientSecret'],
+      );
 
       final client = await clientViaUserConsent(clientId, _scopes, (url) async {
         final uri = Uri.parse(url);
