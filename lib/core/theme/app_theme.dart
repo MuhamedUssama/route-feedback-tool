@@ -165,9 +165,7 @@ abstract class AppTheme {
           textStyle: WidgetStateProperty.all(
             GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
           ),
-          minimumSize: WidgetStateProperty.all(
-            const Size(double.infinity, 50),
-          ), // Standard height
+          minimumSize: WidgetStateProperty.all(const Size(double.infinity, 56)),
         ),
       ),
 
