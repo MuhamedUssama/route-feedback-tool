@@ -80,6 +80,7 @@ class FollowUpActionFooter extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: isEnabled ? onSendPressed : null,
             style: ElevatedButton.styleFrom(
+              minimumSize: const Size(0, 56), // Override infinite width
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),

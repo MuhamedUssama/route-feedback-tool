@@ -4,9 +4,10 @@ part of 'follow_up_action_cubit.dart';
 class FollowUpActionState with _$FollowUpActionState {
   const factory FollowUpActionState.initial() = _Initial;
   const factory FollowUpActionState.loadingHeaders() = _LoadingHeaders;
-  const factory FollowUpActionState.headersLoaded(
-    List<SheetColumnEntity> headers,
-  ) = _HeadersLoaded;
+  const factory FollowUpActionState.headersLoaded({
+    required List<SheetColumnEntity> assignmentHeaders,
+    required List<SheetColumnEntity> followUpHeaders,
+  }) = _HeadersLoaded;
   const factory FollowUpActionState.loadingStudents() = _LoadingStudents;
   const factory FollowUpActionState.studentsLoaded(
     List<StudentEntity> students,

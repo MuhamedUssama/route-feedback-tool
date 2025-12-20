@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:ui' as color;
+
 import 'package:injectable/injectable.dart';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:mentor_assistant/core/errors/auth_error_type.dart';
@@ -79,12 +81,13 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       );
 
       // Fetch ONLY the header row (using logic 1-based index)
-      // If headerRowIndex is 0 (code logic), in API it is row 1.
-      final apiRow = headerRowIndex + 1;
+      // Input Logic: User writes "1" -> code passes "1". API expects "1".
+      // So no offset needed if user input is treated as 1-based natural number.
+      final apiRow = headerRowIndex;
 
       final response = await sheetsApi.spreadsheets.values.get(
         spreadsheetId,
-        '$sheetName!$apiRow:$apiRow', // Fetches single row e.g., "Sheet1!9:9"
+        '$sheetName!$apiRow:$apiRow', // Fetches single row e.g., "Sheet1!1:1"
       );
 
       final values = response.values;
@@ -122,7 +125,8 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       );
 
       // 1. Fetch Master Data starting from Header Row
-      final apiStartRow = masterHeaderRowIndex + 1;
+      // Input Logic: User writes "1". API expects "1".
+      final apiStartRow = masterHeaderRowIndex;
       final masterResponse = await sheetsApi.spreadsheets.values.get(
         masterSheetId,
         '$masterSheetName!$apiStartRow:1000', // Fetch from header downwards
@@ -160,7 +164,7 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       );
 
       // 3.1 Fetch Local Headers
-      final localApiRow = localHeaderRowIndex + 1;
+      final localApiRow = localHeaderRowIndex;
       final localHeaderResponse = await sheetsApi.spreadsheets.values.get(
         currentSheetId,
         '$localSheetName!$localApiRow:$localApiRow',
@@ -213,6 +217,23 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       for (int i = 1; i < masterRows.length; i++) {
         final row = masterRows[i];
 
+        // --- Robust Empty Check Logic ---
+        String cellValue = '';
+        if (row.length > gradeColumnIndex) {
+          final rawValue = row[gradeColumnIndex]; // Can be anything
+          if (rawValue != null) {
+            cellValue = rawValue.toString().trim();
+          }
+        }
+
+        bool isMissing = cellValue.isEmpty;
+
+        // Debug Log
+        // ignore: avoid_print
+        print(
+          'Checking Row ${apiStartRow + i}, Cell Value: "$cellValue" (Missing: $isMissing)',
+        );
+
         // Use the Factory! Clean and readable.
         final student = StudentModel.fromRow(
           row: row,
@@ -226,8 +247,7 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
         if (student.email.isEmpty) continue;
 
         // Logic: Must be in Local Sheet AND Grade is Missing
-        if (localEmails.contains(student.email) &&
-            student.status == 'Missing') {
+        if (localEmails.contains(student.email) && isMissing) {
           missingStudents.add(student);
         }
       }
@@ -261,11 +281,11 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       switch (action) {
         case FollowUpAction.sent:
           statusText = 'Email Sent';
-          statusColor = color.Color(0xFFFFCDD2); // Red 100
+          statusColor = const color.Color(0xFFFFCDD2); // Red 100
           break;
         case FollowUpAction.markedAsDone:
           statusText = 'Done';
-          statusColor = color.Color(0xFFC8E6C9); // Green 100
+          statusColor = const color.Color(0xFFC8E6C9); // Green 100
           break;
       }
 

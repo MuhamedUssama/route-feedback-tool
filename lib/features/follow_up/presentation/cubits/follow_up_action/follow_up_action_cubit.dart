@@ -26,23 +26,58 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
     this._updateStudentStatusUseCase,
   ) : super(const FollowUpActionState.initial());
 
-  Future<void> fetchHeaders({
-    required String spreadsheetId,
-    required int sheetIndex,
-    required int headerRowIndex,
+  Future<void> fetchSetupData({
+    required String assignmentSheetId,
+    required int assignmentHeaderRowIndex,
+    required String followUpSheetId,
+    required int followUpHeaderRowIndex,
   }) async {
     emit(const FollowUpActionState.loadingHeaders());
-    final result = await _getSheetHeadersUseCase(
-      GetSheetHeadersParams(
-        spreadsheetId: spreadsheetId,
-        sheetIndex: sheetIndex,
-        headerRowIndex: headerRowIndex,
-      ),
-    );
 
-    result.fold(
-      (failure) => emit(FollowUpActionState.error(failure.message)),
-      (headers) => emit(FollowUpActionState.headersLoaded(headers)),
+    final results = await Future.wait([
+      _getSheetHeadersUseCase(
+        GetSheetHeadersParams(
+          spreadsheetId: assignmentSheetId,
+          sheetIndex: 0,
+          headerRowIndex: assignmentHeaderRowIndex,
+        ),
+      ),
+      _getSheetHeadersUseCase(
+        GetSheetHeadersParams(
+          spreadsheetId: followUpSheetId,
+          sheetIndex: 0,
+          headerRowIndex: followUpHeaderRowIndex,
+        ),
+      ),
+    ]);
+
+    final assignmentResult = results[0];
+    final followUpResult = results[1];
+
+    if (assignmentResult.isLeft()) {
+      assignmentResult.fold(
+        (l) =>
+            emit(FollowUpActionState.error("Assignment Sheet: ${l.message}")),
+        (r) {},
+      );
+      return;
+    }
+    if (followUpResult.isLeft()) {
+      followUpResult.fold(
+        (l) => emit(FollowUpActionState.error("Follow-Up Sheet: ${l.message}")),
+        (r) {},
+      );
+      return;
+    }
+
+    final assignmentHeaders = assignmentResult.getOrElse(() => []);
+    final followUpHeaders = followUpResult.getOrElse(() => []);
+
+    emit(
+      FollowUpActionState.headersLoaded(
+        assignmentHeaders: assignmentHeaders,
+        followUpHeaders: followUpHeaders,
+      ),
     );
   }
 

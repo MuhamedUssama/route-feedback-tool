@@ -1,14 +1,338 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:mentor_assistant/core/dialogs/dialogs.dart';
 import 'package:mentor_assistant/core/widgets/custom_appbar.dart';
+import 'package:mentor_assistant/features/follow_up/domain/entities/student_entity.dart';
+import 'package:mentor_assistant/features/follow_up/presentation/cubits/follow_up_action/follow_up_action_cubit.dart';
+import 'package:mentor_assistant/features/follow_up/presentation/cubits/follow_up_config/follow_up_config_cubit.dart';
+import 'package:mentor_assistant/features/follow_up/presentation/widgets/follow_up_action_footer.dart';
+import 'package:mentor_assistant/features/follow_up/presentation/widgets/follow_up_filter_header.dart';
+import 'package:mentor_assistant/features/follow_up/presentation/widgets/student_data_table.dart';
 
 class FollowUpScreen extends StatelessWidget {
   const FollowUpScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(title: 'Follow Up'),
-      body: const Center(child: Text('Follow Up Content')),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => GetIt.I<FollowUpConfigCubit>()),
+        BlocProvider(create: (context) => GetIt.I<FollowUpActionCubit>()),
+      ],
+      child: const _FollowUpView(),
+    );
+  }
+}
+
+class _FollowUpView extends StatefulWidget {
+  const _FollowUpView();
+
+  @override
+  State<_FollowUpView> createState() => _FollowUpViewState();
+}
+
+class _FollowUpViewState extends State<_FollowUpView> {
+  // Local State for Filters
+  int? _assignmentRow;
+  int? _followUpRow;
+  int? _assignmentCol;
+  int? _statusCol;
+
+  List<StudentEntity> _selectedStudents = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Gatekeeper Check: Check if config exists
+    context.read<FollowUpConfigCubit>().checkConfig();
+  }
+
+  void _showSetupDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => SetupDialog(
+        onSave: (assignmentId, followUpId) {
+          context.read<FollowUpConfigCubit>().saveConfig(
+            assignmentsSheetId: assignmentId,
+            followUpSheetId: followUpId,
+          );
+          Navigator.of(ctx).pop();
+        },
+      ),
+    );
+  }
+
+  void _showConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => ConfirmationDialog(
+        title: 'Ready to Send?',
+        message:
+            'You are about to send follow-up emails to ${_selectedStudents.length} students. This action cannot be undone.',
+        isDangerous: true,
+        confirmText: 'SEND EMAILS',
+        onConfirm: () {
+          Navigator.of(ctx).pop();
+          _sendEmails();
+        },
+      ),
+    );
+  }
+
+  Future<void> _sendEmails() async {
+    final configState = context.read<FollowUpConfigCubit>().state;
+    final spreadsheetId = configState.maybeWhen(
+      configLoaded: (config) => config.followUpSheetId,
+      orElse: () => null,
+    );
+
+    if (spreadsheetId == null || _statusCol == null) {
+      _showMessenger(
+        context,
+        MessengerType.error,
+        'Configuration Error',
+        'Missing sheet configuration or status column selection.',
+      );
+      return;
+    }
+
+    context.read<FollowUpActionCubit>().sendToSelectedStudents(
+      students: _selectedStudents,
+      assignmentName: 'Required Assignment', // Could be dynamic later
+      spreadsheetId: spreadsheetId,
+      statusColumnIndex: _statusCol!,
+    );
+  }
+
+  void _showMessenger(
+    BuildContext context,
+    MessengerType type,
+    String title,
+    String message,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) =>
+          MessengerDialog(type: type, title: title, message: message),
+    );
+  }
+
+  void _triggerCheckAssignments() {
+    final configState = context.read<FollowUpConfigCubit>().state;
+    final currentAssignmentSheetId = configState.maybeWhen(
+      configLoaded: (config) => config.assignmentsSheetId,
+      orElse: () => null,
+    );
+
+    final followUpSheetId = configState.maybeWhen(
+      configLoaded: (config) => config.followUpSheetId,
+      orElse: () => null,
+    );
+
+    // Validate all inputs
+    if (currentAssignmentSheetId == null ||
+        followUpSheetId == null ||
+        _assignmentRow == null ||
+        _followUpRow == null ||
+        _assignmentCol == null || // Grade column in master
+        _statusCol == null) {
+      _showMessenger(
+        context,
+        MessengerType.error,
+        'Invalid Selection',
+        'Please ensure all fields (Rows & Columns) are selected.',
+      );
+      return;
+    }
+
+    context.read<FollowUpActionCubit>().checkAssignments(
+      masterSheetId: currentAssignmentSheetId,
+      masterSheetIndex: 0, // Defaulting to 0 as per usual
+      masterHeaderRowIndex: _assignmentRow!,
+      localHeaderRowIndex: _followUpRow!,
+      gradeColumnIndex: _assignmentCol!,
+      currentSheetId: followUpSheetId,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocListener(
+      listeners: [
+        // Config Listener (Gatekeeper)
+        BlocListener<FollowUpConfigCubit, FollowUpConfigState>(
+          listener: (context, state) {
+            state.whenOrNull(
+              configMissing: () => _showSetupDialog(context),
+              error: (msg) => _showMessenger(
+                context,
+                MessengerType.error,
+                'Config Error',
+                msg,
+              ),
+            );
+          },
+        ),
+        // Action Listener (Feedback)
+        BlocListener<FollowUpActionCubit, FollowUpActionState>(
+          listener: (context, state) {
+            state.whenOrNull(
+              success: (msg) => _showMessenger(
+                context,
+                MessengerType.success,
+                'Success',
+                msg,
+              ),
+              error: (msg) => _showMessenger(
+                context,
+                MessengerType.error,
+                'Operation Failed',
+                msg,
+              ),
+            );
+          },
+        ),
+      ],
+      child: Scaffold(
+        appBar: const CustomAppBar(title: 'Follow Up Dashboard'),
+        body: Column(
+          children: [
+            // Header Section
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: FollowUpFilterHeader(
+                onLoadColumns: (assignRow, fUpRow) {
+                  setState(() {
+                    _assignmentRow = assignRow;
+                    _followUpRow = fUpRow;
+                  });
+
+                  final configState = context.read<FollowUpConfigCubit>().state;
+
+                  // Extract IDs
+                  String? assignId;
+                  String? fUpId;
+
+                  configState.maybeWhen(
+                    configLoaded: (config) {
+                      assignId = config.assignmentsSheetId;
+                      fUpId = config.followUpSheetId;
+                    },
+                    orElse: () {},
+                  );
+
+                  if (assignId != null && fUpId != null) {
+                    context.read<FollowUpActionCubit>().fetchSetupData(
+                      assignmentSheetId: assignId!,
+                      assignmentHeaderRowIndex: assignRow,
+                      followUpSheetId: fUpId!,
+                      followUpHeaderRowIndex: fUpRow,
+                    );
+                  } else {
+                    _showMessenger(
+                      context,
+                      MessengerType.error,
+                      'Config Error',
+                      'Sheet Configurations not found.',
+                    );
+                  }
+                },
+                onFiltersChanged: (assignCol, statusCol) {
+                  setState(() {
+                    _assignmentCol = assignCol;
+                    _statusCol = statusCol;
+                  });
+                },
+              ),
+            ),
+
+            // Action Button (Animated)
+            if (_assignmentRow != null &&
+                _followUpRow != null &&
+                _assignmentCol != null &&
+                _statusCol != null)
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 16),
+                child: ElevatedButton.icon(
+                  onPressed: _triggerCheckAssignments,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 48,
+                      vertical: 24,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    elevation: 6,
+                    shadowColor: Theme.of(
+                      context,
+                    ).colorScheme.secondary.withValues(alpha: 0.5),
+                  ),
+                  icon: const Icon(Icons.search_rounded, size: 28),
+                  label: Text(
+                    'CHECK FOR MISSING ASSIGNMENTS',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+              ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+
+            // Data Table / Loading
+            Expanded(
+              child: BlocBuilder<FollowUpActionCubit, FollowUpActionState>(
+                builder: (context, state) {
+                  return state.maybeWhen(
+                    loadingStudents: () => Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const CircularProgressIndicator(),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Analyzing Sheets...',
+                            style: GoogleFonts.inter(
+                              color: Colors.grey,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    studentsLoaded: (students) => StudentDataTable(
+                      students: students,
+                      onSelectionChanged: (selected) {
+                        setState(() {
+                          _selectedStudents = selected;
+                        });
+                      },
+                    ),
+                    // If sending, we could ideally keep the list visible.
+                    // For now, we return empty or could potentially store state differently.
+                    // Given strict requirements, shrinking is safe to avoid state loss crashes
+                    // if we don't have the students list in this state.
+                    orElse: () => const SizedBox.shrink(),
+                  );
+                },
+              ),
+            ),
+
+            // Footer
+            FollowUpActionFooter(
+              selectedCount: _selectedStudents.length,
+              onSendPressed: () => _showConfirmationDialog(context),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

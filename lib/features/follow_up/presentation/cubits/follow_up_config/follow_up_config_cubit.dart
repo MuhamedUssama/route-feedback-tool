@@ -21,6 +21,8 @@ class FollowUpConfigCubit extends Cubit<FollowUpConfigState> {
 
   Future<void> checkConfig() async {
     emit(const FollowUpConfigState.loading());
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // prefs.remove('follow_up_config');
     final result = await _getFollowUpConfigUseCase(const NoParams());
     result.fold((failure) => emit(FollowUpConfigState.error(failure.message)), (
       config,

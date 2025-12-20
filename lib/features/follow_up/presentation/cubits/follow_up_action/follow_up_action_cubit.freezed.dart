@@ -140,12 +140,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loadingHeaders,TResult Function( List<SheetColumnEntity> headers)?  headersLoaded,TResult Function()?  loadingStudents,TResult Function( List<StudentEntity> students)?  studentsLoaded,TResult Function( int total,  int current,  List<String> failedEmails)?  sendingProgress,TResult Function( String message)?  success,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loadingHeaders,TResult Function( List<SheetColumnEntity> assignmentHeaders,  List<SheetColumnEntity> followUpHeaders)?  headersLoaded,TResult Function()?  loadingStudents,TResult Function( List<StudentEntity> students)?  studentsLoaded,TResult Function( int total,  int current,  List<String> failedEmails)?  sendingProgress,TResult Function( String message)?  success,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _LoadingHeaders() when loadingHeaders != null:
 return loadingHeaders();case _HeadersLoaded() when headersLoaded != null:
-return headersLoaded(_that.headers);case _LoadingStudents() when loadingStudents != null:
+return headersLoaded(_that.assignmentHeaders,_that.followUpHeaders);case _LoadingStudents() when loadingStudents != null:
 return loadingStudents();case _StudentsLoaded() when studentsLoaded != null:
 return studentsLoaded(_that.students);case _SendingProgress() when sendingProgress != null:
 return sendingProgress(_that.total,_that.current,_that.failedEmails);case _Success() when success != null:
@@ -168,12 +168,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loadingHeaders,required TResult Function( List<SheetColumnEntity> headers)  headersLoaded,required TResult Function()  loadingStudents,required TResult Function( List<StudentEntity> students)  studentsLoaded,required TResult Function( int total,  int current,  List<String> failedEmails)  sendingProgress,required TResult Function( String message)  success,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loadingHeaders,required TResult Function( List<SheetColumnEntity> assignmentHeaders,  List<SheetColumnEntity> followUpHeaders)  headersLoaded,required TResult Function()  loadingStudents,required TResult Function( List<StudentEntity> students)  studentsLoaded,required TResult Function( int total,  int current,  List<String> failedEmails)  sendingProgress,required TResult Function( String message)  success,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _LoadingHeaders():
 return loadingHeaders();case _HeadersLoaded():
-return headersLoaded(_that.headers);case _LoadingStudents():
+return headersLoaded(_that.assignmentHeaders,_that.followUpHeaders);case _LoadingStudents():
 return loadingStudents();case _StudentsLoaded():
 return studentsLoaded(_that.students);case _SendingProgress():
 return sendingProgress(_that.total,_that.current,_that.failedEmails);case _Success():
@@ -195,12 +195,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loadingHeaders,TResult? Function( List<SheetColumnEntity> headers)?  headersLoaded,TResult? Function()?  loadingStudents,TResult? Function( List<StudentEntity> students)?  studentsLoaded,TResult? Function( int total,  int current,  List<String> failedEmails)?  sendingProgress,TResult? Function( String message)?  success,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loadingHeaders,TResult? Function( List<SheetColumnEntity> assignmentHeaders,  List<SheetColumnEntity> followUpHeaders)?  headersLoaded,TResult? Function()?  loadingStudents,TResult? Function( List<StudentEntity> students)?  studentsLoaded,TResult? Function( int total,  int current,  List<String> failedEmails)?  sendingProgress,TResult? Function( String message)?  success,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _LoadingHeaders() when loadingHeaders != null:
 return loadingHeaders();case _HeadersLoaded() when headersLoaded != null:
-return headersLoaded(_that.headers);case _LoadingStudents() when loadingStudents != null:
+return headersLoaded(_that.assignmentHeaders,_that.followUpHeaders);case _LoadingStudents() when loadingStudents != null:
 return loadingStudents();case _StudentsLoaded() when studentsLoaded != null:
 return studentsLoaded(_that.students);case _SendingProgress() when sendingProgress != null:
 return sendingProgress(_that.total,_that.current,_that.failedEmails);case _Success() when success != null:
@@ -281,14 +281,21 @@ String toString() {
 
 
 class _HeadersLoaded implements FollowUpActionState {
-  const _HeadersLoaded(final  List<SheetColumnEntity> headers): _headers = headers;
+  const _HeadersLoaded({required final  List<SheetColumnEntity> assignmentHeaders, required final  List<SheetColumnEntity> followUpHeaders}): _assignmentHeaders = assignmentHeaders,_followUpHeaders = followUpHeaders;
   
 
- final  List<SheetColumnEntity> _headers;
- List<SheetColumnEntity> get headers {
-  if (_headers is EqualUnmodifiableListView) return _headers;
+ final  List<SheetColumnEntity> _assignmentHeaders;
+ List<SheetColumnEntity> get assignmentHeaders {
+  if (_assignmentHeaders is EqualUnmodifiableListView) return _assignmentHeaders;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_headers);
+  return EqualUnmodifiableListView(_assignmentHeaders);
+}
+
+ final  List<SheetColumnEntity> _followUpHeaders;
+ List<SheetColumnEntity> get followUpHeaders {
+  if (_followUpHeaders is EqualUnmodifiableListView) return _followUpHeaders;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_followUpHeaders);
 }
 
 
@@ -302,16 +309,16 @@ _$HeadersLoadedCopyWith<_HeadersLoaded> get copyWith => __$HeadersLoadedCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HeadersLoaded&&const DeepCollectionEquality().equals(other._headers, _headers));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HeadersLoaded&&const DeepCollectionEquality().equals(other._assignmentHeaders, _assignmentHeaders)&&const DeepCollectionEquality().equals(other._followUpHeaders, _followUpHeaders));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_headers));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_assignmentHeaders),const DeepCollectionEquality().hash(_followUpHeaders));
 
 @override
 String toString() {
-  return 'FollowUpActionState.headersLoaded(headers: $headers)';
+  return 'FollowUpActionState.headersLoaded(assignmentHeaders: $assignmentHeaders, followUpHeaders: $followUpHeaders)';
 }
 
 
@@ -322,7 +329,7 @@ abstract mixin class _$HeadersLoadedCopyWith<$Res> implements $FollowUpActionSta
   factory _$HeadersLoadedCopyWith(_HeadersLoaded value, $Res Function(_HeadersLoaded) _then) = __$HeadersLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<SheetColumnEntity> headers
+ List<SheetColumnEntity> assignmentHeaders, List<SheetColumnEntity> followUpHeaders
 });
 
 
@@ -339,9 +346,10 @@ class __$HeadersLoadedCopyWithImpl<$Res>
 
 /// Create a copy of FollowUpActionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? headers = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? assignmentHeaders = null,Object? followUpHeaders = null,}) {
   return _then(_HeadersLoaded(
-null == headers ? _self._headers : headers // ignore: cast_nullable_to_non_nullable
+assignmentHeaders: null == assignmentHeaders ? _self._assignmentHeaders : assignmentHeaders // ignore: cast_nullable_to_non_nullable
+as List<SheetColumnEntity>,followUpHeaders: null == followUpHeaders ? _self._followUpHeaders : followUpHeaders // ignore: cast_nullable_to_non_nullable
 as List<SheetColumnEntity>,
   ));
 }
