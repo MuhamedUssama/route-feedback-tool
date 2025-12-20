@@ -14,13 +14,20 @@ abstract interface class AuthRemoteDataSource {
 @LazySingleton(as: AuthRemoteDataSource)
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final GoogleAuthClient _googleAuthClient;
-
-  AuthRemoteDataSourceImpl(this._googleAuthClient);
+  const AuthRemoteDataSourceImpl(this._googleAuthClient);
 
   @override
   Future<UserModel> loginWithGoogle() async {
     try {
-      final client = await _googleAuthClient.getAuthenticatedClient();
+      final client = await _googleAuthClient.getAuthenticatedClient().timeout(
+        const Duration(seconds: 100),
+        onTimeout: () {
+          throw const GoogleAuthException(
+            'Login timed out or was cancelled',
+            AuthErrorType.cancelled,
+          );
+        },
+      );
 
       if (client == null) {
         throw const GoogleAuthException(

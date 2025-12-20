@@ -13,10 +13,9 @@ abstract interface class AuthLocalDataSource {
 @LazySingleton(as: AuthLocalDataSource)
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   final SharedPreferences _prefs;
+  const AuthLocalDataSourceImpl(this._prefs);
 
   static const String _kCachedUserKey = 'CACHED_USER';
-
-  AuthLocalDataSourceImpl(this._prefs);
 
   @override
   Future<void> cacheUser(UserModel user) async {

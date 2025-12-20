@@ -33,8 +33,11 @@ class AuthRepositoryImpl implements AuthRepository {
         print("❌ Parsing Error: $e \nStack: $stackTrace");
       }
       return const Left(Failure.server('Unable to process user data'));
-    } catch (e) {
-      return Left(Failure.unexpected(e.toString()));
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print("❌ Unexpected Error in AuthRepository: $e \nStack: $stackTrace");
+      }
+      return Left(Failure.server(e.toString()));
     }
   }
 
