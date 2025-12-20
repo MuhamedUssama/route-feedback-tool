@@ -26,6 +26,16 @@ import '../../features/auth/domain/usecases/login_with_google_usecase.dart'
     as _i57;
 import '../../features/auth/domain/usecases/logout_usecase.dart' as _i48;
 import '../../features/auth/presentation/cubit/auth_cubit.dart' as _i117;
+import '../../features/follow_up/data/datasources/follow_up_local_data_source.dart'
+    as _i1015;
+import '../../features/follow_up/data/datasources/gmail_remote_data_source.dart'
+    as _i962;
+import '../../features/follow_up/data/datasources/sheets_remote_data_source.dart'
+    as _i850;
+import '../../features/follow_up/data/repositories/follow_up_repository_impl.dart'
+    as _i826;
+import '../../features/follow_up/domain/repositories/follow_up_repository.dart'
+    as _i934;
 import '../network/google_auth_client.dart' as _i527;
 import '../services/shared_prefs_service.dart' as _i816;
 import 'register_module.dart' as _i291;
@@ -46,11 +56,20 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i816.SharedPrefsService>(
       () => _i816.SharedPrefsService(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i1015.FollowUpLocalDataSource>(
+      () => _i1015.FollowUpLocalDataSourceImpl(gh<_i816.SharedPrefsService>()),
+    );
     gh.lazySingleton<_i852.AuthLocalDataSource>(
       () => _i852.AuthLocalDataSourceImpl(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i850.SheetsRemoteDataSource>(
+      () => _i850.SheetsRemoteDataSourceImpl(gh<_i527.GoogleAuthClient>()),
+    );
     gh.lazySingleton<_i107.AuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSourceImpl(gh<_i527.GoogleAuthClient>()),
+    );
+    gh.lazySingleton<_i962.GmailRemoteDataSource>(
+      () => _i962.GmailRemoteDataSourceImpl(gh<_i527.GoogleAuthClient>()),
     );
     gh.lazySingleton<_i787.AuthRepository>(
       () => _i153.AuthRepositoryImpl(
@@ -66,6 +85,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i48.LogoutUseCase>(
       () => _i48.LogoutUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.lazySingleton<_i934.FollowUpRepository>(
+      () => _i826.FollowUpRepositoryImpl(
+        gh<_i850.SheetsRemoteDataSource>(),
+        gh<_i962.GmailRemoteDataSource>(),
+        gh<_i1015.FollowUpLocalDataSource>(),
+      ),
     );
     gh.factory<_i117.AuthCubit>(
       () => _i117.AuthCubit(gh<_i57.LoginWithGoogleUseCase>()),
