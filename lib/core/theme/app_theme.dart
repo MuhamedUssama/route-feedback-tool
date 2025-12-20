@@ -228,9 +228,9 @@ abstract class AppTheme {
 
       // SnackBar
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: isDark ? _surfaceDark : _textPrimaryLight,
+        backgroundColor: isDark ? _textPrimaryDark : _textPrimaryLight,
         contentTextStyle: GoogleFonts.inter(
-          color: isDark ? Colors.white : Colors.white,
+          color: isDark ? _textPrimaryLight : _textPrimaryDark,
         ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
