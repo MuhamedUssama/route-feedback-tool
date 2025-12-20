@@ -36,6 +36,18 @@ import '../../features/follow_up/data/repositories/follow_up_repository_impl.dar
     as _i826;
 import '../../features/follow_up/domain/repositories/follow_up_repository.dart'
     as _i934;
+import '../../features/follow_up/domain/usecases/check_missing_assignments_usecase.dart'
+    as _i306;
+import '../../features/follow_up/domain/usecases/get_follow_up_config_usecase.dart'
+    as _i68;
+import '../../features/follow_up/domain/usecases/get_sheet_headers_usecase.dart'
+    as _i578;
+import '../../features/follow_up/domain/usecases/save_follow_up_config_usecase.dart'
+    as _i265;
+import '../../features/follow_up/domain/usecases/send_follow_up_email_usecase.dart'
+    as _i847;
+import '../../features/follow_up/domain/usecases/update_student_status_usecase.dart'
+    as _i880;
 import '../network/google_auth_client.dart' as _i527;
 import '../services/shared_prefs_service.dart' as _i816;
 import 'register_module.dart' as _i291;
@@ -95,6 +107,25 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i117.AuthCubit>(
       () => _i117.AuthCubit(gh<_i57.LoginWithGoogleUseCase>()),
+    );
+    gh.lazySingleton<_i306.CheckMissingAssignmentsUseCase>(
+      () =>
+          _i306.CheckMissingAssignmentsUseCase(gh<_i934.FollowUpRepository>()),
+    );
+    gh.lazySingleton<_i68.GetFollowUpConfigUseCase>(
+      () => _i68.GetFollowUpConfigUseCase(gh<_i934.FollowUpRepository>()),
+    );
+    gh.lazySingleton<_i578.GetSheetHeadersUseCase>(
+      () => _i578.GetSheetHeadersUseCase(gh<_i934.FollowUpRepository>()),
+    );
+    gh.lazySingleton<_i265.SaveFollowUpConfigUseCase>(
+      () => _i265.SaveFollowUpConfigUseCase(gh<_i934.FollowUpRepository>()),
+    );
+    gh.lazySingleton<_i847.SendFollowUpEmailUseCase>(
+      () => _i847.SendFollowUpEmailUseCase(gh<_i934.FollowUpRepository>()),
+    );
+    gh.lazySingleton<_i880.UpdateStudentStatusUseCase>(
+      () => _i880.UpdateStudentStatusUseCase(gh<_i934.FollowUpRepository>()),
     );
     return this;
   }
