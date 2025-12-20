@@ -49,9 +49,10 @@ import '../../features/follow_up/domain/usecases/send_follow_up_email_usecase.da
 import '../../features/follow_up/domain/usecases/update_student_status_usecase.dart'
     as _i880;
 import '../../features/follow_up/presentation/cubits/follow_up_action/follow_up_action_cubit.dart'
-    as _i20;
+    as _i320;
 import '../../features/follow_up/presentation/cubits/follow_up_config/follow_up_config_cubit.dart'
-    as _i268;
+    as _i333;
+import '../../features/main_layout/cubit/navigation_cubit.dart' as _i406;
 import '../network/google_auth_client.dart' as _i527;
 import '../services/shared_prefs_service.dart' as _i816;
 import 'register_module.dart' as _i291;
@@ -68,6 +69,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => registerModule.prefs,
       preResolve: true,
     );
+    gh.factory<_i406.NavigationCubit>(() => _i406.NavigationCubit());
     gh.lazySingleton<_i527.GoogleAuthClient>(() => _i527.GoogleAuthClient());
     gh.lazySingleton<_i816.SharedPrefsService>(
       () => _i816.SharedPrefsService(gh<_i460.SharedPreferences>()),
@@ -131,14 +133,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i880.UpdateStudentStatusUseCase>(
       () => _i880.UpdateStudentStatusUseCase(gh<_i934.FollowUpRepository>()),
     );
-    gh.factory<_i268.FollowUpConfigCubit>(
-      () => _i268.FollowUpConfigCubit(
+    gh.factory<_i333.FollowUpConfigCubit>(
+      () => _i333.FollowUpConfigCubit(
         gh<_i68.GetFollowUpConfigUseCase>(),
         gh<_i265.SaveFollowUpConfigUseCase>(),
       ),
     );
-    gh.factory<_i20.FollowUpActionCubit>(
-      () => _i20.FollowUpActionCubit(
+    gh.factory<_i320.FollowUpActionCubit>(
+      () => _i320.FollowUpActionCubit(
         gh<_i578.GetSheetHeadersUseCase>(),
         gh<_i306.CheckMissingAssignmentsUseCase>(),
         gh<_i847.SendFollowUpEmailUseCase>(),

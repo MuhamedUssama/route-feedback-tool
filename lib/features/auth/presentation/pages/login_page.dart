@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mentor_assistant/core/router/app_router.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/login_body.dart';
@@ -24,6 +25,10 @@ class LoginPage extends StatelessWidget {
             success: (user) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Login Successful!')),
+              );
+              Navigator.pushReplacementNamed(
+                context,
+                AppRouter.mainLayoutRoute,
               );
             },
             orElse: () {},
