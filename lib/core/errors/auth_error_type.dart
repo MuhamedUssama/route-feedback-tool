@@ -1,1 +1,7 @@
-enum AuthErrorType { cancelled, scopesDenied, network, unknown }
+enum AuthErrorType {
+  cancelled,
+  scopesDenied,
+  network,
+  unknown,
+  userNotAuthenticated,
+}

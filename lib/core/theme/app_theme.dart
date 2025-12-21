@@ -49,15 +49,15 @@ abstract class AppTheme {
         backgroundColor: isDark ? _surfaceDark : _surfaceLight,
         foregroundColor: primaryText,
         centerTitle: false,
-        elevation: isDark ? 0 : 0.5,
-        scrolledUnderElevation: isDark ? 0 : 1,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         shadowColor: Colors.black.withValues(alpha: 0.1),
         iconTheme: IconThemeData(color: primaryText),
         actionsIconTheme: IconThemeData(color: primaryText),
         titleTextStyle: GoogleFonts.poppins(
           color: primaryText,
           fontWeight: FontWeight.w600,
-          fontSize: 20, // matches headlineSmall roughly
+          fontSize: 24,
         ),
       ),
 
@@ -163,7 +163,11 @@ abstract class AppTheme {
             const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           ),
           textStyle: WidgetStateProperty.all(
-            GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+            GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              letterSpacing: 1.0,
+            ),
           ),
           minimumSize: WidgetStateProperty.all(const Size(double.infinity, 56)),
         ),
@@ -219,9 +223,42 @@ abstract class AppTheme {
         }),
       ),
 
+      // NavigationRail
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: isDark ? _surfaceDark : _surfaceLight,
+        elevation: 0,
+        indicatorColor: _secondary.withValues(alpha: isDark ? 0.2 : 0.3),
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        groupAlignment: -0.9, // Align to top
+        labelType: NavigationRailLabelType.all,
+
+        // Icons
+        selectedIconTheme: IconThemeData(
+          color: isDark ? _secondary : _primary,
+          size: 24,
+        ),
+        unselectedIconTheme: IconThemeData(color: secondaryText, size: 24),
+
+        // Labels
+        selectedLabelTextStyle: GoogleFonts.outfit(
+          color: isDark ? _secondary : _primary,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          letterSpacing: 0.5,
+        ),
+        unselectedLabelTextStyle: GoogleFonts.outfit(
+          color: secondaryText,
+          fontWeight: FontWeight.w500,
+          fontSize: 12,
+          letterSpacing: 0.5,
+        ),
+      ),
+
       // Divider
       dividerTheme: DividerThemeData(
-        color: isDark ? Colors.grey[800] : Colors.grey[200],
+        color: isDark ? Colors.grey[800] : Colors.grey[400],
         thickness: 1,
         space: 1,
       ),
@@ -232,6 +269,8 @@ abstract class AppTheme {
         contentTextStyle: GoogleFonts.inter(
           color: isDark ? _textPrimaryLight : _textPrimaryDark,
         ),
+        width: 400,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -19,14 +20,51 @@ class GoogleAuthClient {
     GmailApi.gmailSendScope,
   ];
 
+  // Cache for the authenticated client
+  http.Client? _cachedClient;
+  // Completer to handle concurrent login requests (Race Condition Prevention)
+  Completer<http.Client?>? _loginCompleter;
+
   // ================== Main Entry Point ==================
   Future<http.Client?> getAuthenticatedClient() async {
-    if (Platform.isMacOS) {
-      return _signInMacOS();
-    } else if (Platform.isWindows) {
-      return _signInWindows();
+    // 1. Return cached client if available
+    if (_cachedClient != null) {
+      return _cachedClient;
     }
-    throw UnimplementedError("Platform not supported");
+
+    // 2. If a login is already in progress, wait for it
+    if (_loginCompleter != null) {
+      return _loginCompleter!.future;
+    }
+
+    // 3. Start new login flow
+    _loginCompleter = Completer<http.Client?>();
+
+    try {
+      http.Client? client;
+      if (Platform.isMacOS) {
+        client = await _signInMacOS();
+      } else if (Platform.isWindows) {
+        client = await _signInWindows();
+      } else {
+        throw UnimplementedError("Platform not supported");
+      }
+
+      if (client != null) {
+        _cachedClient = client;
+        _loginCompleter!.complete(client);
+      } else {
+        _loginCompleter!.complete(null);
+      }
+    } catch (e) {
+      _loginCompleter!.completeError(e);
+      _loginCompleter = null; // Reset on error
+      rethrow;
+    } finally {
+      _loginCompleter = null; // Reset after completion
+    }
+
+    return _cachedClient;
   }
 
   Future<void> signOut() async {
