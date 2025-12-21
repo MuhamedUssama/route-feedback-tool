@@ -7,7 +7,13 @@ import '../../domain/entities/sheet_column_entity.dart';
 import '../cubits/follow_up_action/follow_up_action_cubit.dart';
 
 class FollowUpFilterHeader extends StatefulWidget {
-  final Function(int assignmentRow, int followUpRow) onLoadColumns;
+  final Function(
+    int assignmentRow,
+    int followUpRow,
+    String assignmentStartCol,
+    String followUpStartCol,
+  )
+  onLoadColumns;
   final Function(int assignmentColumnIndex, int statusColumnIndex)
   onFiltersChanged;
 
@@ -24,6 +30,8 @@ class FollowUpFilterHeader extends StatefulWidget {
 class _FollowUpFilterHeaderState extends State<FollowUpFilterHeader> {
   final _assignmentRowController = TextEditingController();
   final _followUpRowController = TextEditingController();
+  final _assignmentStartColController = TextEditingController();
+  final _followUpStartColController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   SheetColumnEntity? _selectedAssignmentColumn;
@@ -33,6 +41,8 @@ class _FollowUpFilterHeaderState extends State<FollowUpFilterHeader> {
   void dispose() {
     _assignmentRowController.dispose();
     _followUpRowController.dispose();
+    _assignmentStartColController.dispose();
+    _followUpStartColController.dispose();
     super.dispose();
   }
 
@@ -76,37 +86,69 @@ class _FollowUpFilterHeaderState extends State<FollowUpFilterHeader> {
             ),
             const SizedBox(height: 24),
 
-            // Row 1: Header Row Inputs & Load Button
+            // Row 1: Header Row Inputs & Start Column Inputs
             Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Assignment Config
                 Expanded(
-                  child: TextFormField(
-                    controller: _assignmentRowController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: const InputDecoration(
-                      labelText: 'Assignments Sheet Header Row',
-                      prefixIcon: Icon(Icons.table_rows_rounded),
-                      hintText: 'e.g. 1',
-                    ),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _assignmentRowController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Assignment Header Row',
+                          prefixIcon: Icon(Icons.table_rows_rounded),
+                          hintText: 'e.g. 1',
+                        ),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Required' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _assignmentStartColController,
+                        decoration: const InputDecoration(
+                          labelText: 'Start Column (Letter)',
+                          prefixIcon: Icon(Icons.start_rounded),
+                          hintText: 'e.g. A',
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 16),
+                // Follow-Up Config
                 Expanded(
-                  child: TextFormField(
-                    controller: _followUpRowController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: const InputDecoration(
-                      labelText: 'Follow-Up Sheet Header Row',
-                      prefixIcon: Icon(Icons.layers_outlined),
-                      hintText: 'e.g. 1',
-                    ),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _followUpRowController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Follow-Up Header Row',
+                          prefixIcon: Icon(Icons.layers_outlined),
+                          hintText: 'e.g. 1',
+                        ),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Required' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _followUpStartColController,
+                        decoration: const InputDecoration(
+                          labelText: 'Start Column (Letter)',
+                          prefixIcon: Icon(Icons.start_rounded),
+                          hintText: 'e.g. H',
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -118,48 +160,52 @@ class _FollowUpFilterHeaderState extends State<FollowUpFilterHeader> {
                     );
 
                     return SizedBox(
-                      height: 56, // Match input height
-                      child: ElevatedButton.icon(
-                        onPressed: isLoading
-                            ? null
-                            : () {
-                                if (_formKey.currentState!.validate()) {
-                                  final assignmentRow = int.parse(
-                                    _assignmentRowController.text,
-                                  );
-                                  final followUpRow = int.parse(
-                                    _followUpRowController.text,
-                                  );
-                                  widget.onLoadColumns(
-                                    assignmentRow,
-                                    followUpRow,
-                                  );
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          // Override default infinite width from theme
-                          minimumSize: const Size(0, 56),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 20,
+                      height: 128,
+                      child: Center(
+                        child: ElevatedButton.icon(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  if (_formKey.currentState!.validate()) {
+                                    final assignmentRow = int.parse(
+                                      _assignmentRowController.text,
+                                    );
+                                    final followUpRow = int.parse(
+                                      _followUpRowController.text,
+                                    );
+                                    widget.onLoadColumns(
+                                      assignmentRow,
+                                      followUpRow,
+                                      _assignmentStartColController.text,
+                                      _followUpStartColController.text,
+                                    );
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(0, 56),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 20,
+                            ),
                           ),
-                        ),
-                        icon: isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.refresh_rounded),
-                        label: Text(
-                          isLoading ? 'LOADING...' : 'LOAD COLUMNS',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            letterSpacing: 1.0,
+                          icon: isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.refresh_rounded),
+                          label: Text(
+                            isLoading ? 'LOADING...' : 'LOAD COLUMNS',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              letterSpacing: 1.0,
+                            ),
                           ),
                         ),
                       ),

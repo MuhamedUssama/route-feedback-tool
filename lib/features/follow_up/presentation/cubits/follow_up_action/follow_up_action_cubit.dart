@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:mentor_assistant/core/utils/google_sheet_url_parser.dart';
+import 'package:mentor_assistant/core/utils/sheet_utils.dart';
 import '../../../domain/entities/sheet_column_entity.dart';
 import '../../../domain/entities/student_entity.dart';
 import '../../../domain/entities/follow_up_config_entity.dart';
@@ -30,8 +31,10 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
   Future<void> fetchSetupData({
     required String assignmentSheetUrl,
     required int assignmentHeaderRowIndex,
+    required String assignmentStartColLetter,
     required String followUpSheetUrl,
     required int followUpHeaderRowIndex,
+    required String followUpStartColLetter,
   }) async {
     emit(const FollowUpActionState.loadingHeaders());
 
@@ -85,8 +88,23 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
       return;
     }
 
-    final assignmentHeaders = assignmentResult.getOrElse(() => []);
-    final followUpHeaders = followUpResult.getOrElse(() => []);
+    // Filter Headers
+    final minAssignmentIndex = SheetUtils.columnLetterToIndex(
+      assignmentStartColLetter,
+    );
+    final minFollowUpIndex = SheetUtils.columnLetterToIndex(
+      followUpStartColLetter,
+    );
+
+    final assignmentHeaders = assignmentResult
+        .getOrElse(() => [])
+        .where((col) => col.index >= minAssignmentIndex)
+        .toList();
+
+    final followUpHeaders = followUpResult
+        .getOrElse(() => [])
+        .where((col) => col.index >= minFollowUpIndex)
+        .toList();
 
     emit(
       FollowUpActionState.headersLoaded(
@@ -189,8 +207,6 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
 
       // Status Update (Only if email sent successfully)
       if (emailSent) {
-        // Fire and forget status update to not block the loop too much,
-        // or await if we want strict consistency. Let's await to be safe.
         await _updateStudentStatusUseCase(
           UpdateStudentStatusParams(
             spreadsheetId: sheetInfo.spreadsheetId,

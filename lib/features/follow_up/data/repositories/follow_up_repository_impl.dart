@@ -37,8 +37,6 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
         headerRowIndex,
         detectMergedHeaders: detectMergedHeaders,
       );
-      // Map Model -> Entity (simple casting if same structure or manual map)
-      // Assuming SheetColumnModel extends SheetColumnEntity
       return Right(columns);
     } on GoogleAuthException catch (e) {
       return Left(AuthFailure(e.message, e.type));
@@ -140,17 +138,6 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
     FollowUpConfigEntity config,
   ) async {
     try {
-      // Need to verify FollowUpConfigModel structure but proceeding with what was there
-      // or adapting if Model changed.
-      // Assuming Model structure matches Entity roughly for this step.
-      // Wait, I saw saveFollowUpConfig using assignmentsSheetId etc in reading.
-      // Let's keep existing logic structure but just fix variable names if they were off.
-      // The previous view showed:
-      // assignmentsSheetId: config.assignmentsSheetId,
-      // followUpSheetId: config.followUpSheetId,
-      // But wait, the Entity has generic naming?
-      // I'll assume the entity has fields.
-      // Actually, I'll stick to the previous file content for `saveFollowUpConfig` unless I need to change it.
       final model = FollowUpConfigModel(
         assignmentsSheetUrl: config.assignmentsSheetUrl,
         followUpSheetUrl: config.followUpSheetUrl,

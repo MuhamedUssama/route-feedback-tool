@@ -204,42 +204,47 @@ class _FollowUpViewState extends State<_FollowUpView> {
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: FollowUpFilterHeader(
-                onLoadColumns: (assignRow, fUpRow) {
-                  setState(() {
-                    _assignmentRow = assignRow;
-                    _followUpRow = fUpRow;
-                  });
+                onLoadColumns:
+                    (assignRow, fUpRow, assignStartCol, fUpStartCol) {
+                      setState(() {
+                        _assignmentRow = assignRow;
+                        _followUpRow = fUpRow;
+                      });
 
-                  final configState = context.read<FollowUpConfigCubit>().state;
+                      final configState = context
+                          .read<FollowUpConfigCubit>()
+                          .state;
 
-                  // Extract URLs
-                  String? assignUrl;
-                  String? fUpUrl;
+                      // Extract URLs
+                      String? assignUrl;
+                      String? fUpUrl;
 
-                  configState.maybeWhen(
-                    configLoaded: (config) {
-                      assignUrl = config.assignmentsSheetUrl;
-                      fUpUrl = config.followUpSheetUrl;
+                      configState.maybeWhen(
+                        configLoaded: (config) {
+                          assignUrl = config.assignmentsSheetUrl;
+                          fUpUrl = config.followUpSheetUrl;
+                        },
+                        orElse: () {},
+                      );
+
+                      if (assignUrl != null && fUpUrl != null) {
+                        context.read<FollowUpActionCubit>().fetchSetupData(
+                          assignmentSheetUrl: assignUrl!,
+                          assignmentHeaderRowIndex: assignRow,
+                          assignmentStartColLetter: assignStartCol,
+                          followUpSheetUrl: fUpUrl!,
+                          followUpHeaderRowIndex: fUpRow,
+                          followUpStartColLetter: fUpStartCol,
+                        );
+                      } else {
+                        _showMessenger(
+                          context,
+                          MessengerType.error,
+                          'Config Error',
+                          'Sheet Configurations not found.',
+                        );
+                      }
                     },
-                    orElse: () {},
-                  );
-
-                  if (assignUrl != null && fUpUrl != null) {
-                    context.read<FollowUpActionCubit>().fetchSetupData(
-                      assignmentSheetUrl: assignUrl!,
-                      assignmentHeaderRowIndex: assignRow,
-                      followUpSheetUrl: fUpUrl!,
-                      followUpHeaderRowIndex: fUpRow,
-                    );
-                  } else {
-                    _showMessenger(
-                      context,
-                      MessengerType.error,
-                      'Config Error',
-                      'Sheet Configurations not found.',
-                    );
-                  }
-                },
                 onFiltersChanged: (assignCol, statusCol) {
                   setState(() {
                     _assignmentCol = assignCol;
