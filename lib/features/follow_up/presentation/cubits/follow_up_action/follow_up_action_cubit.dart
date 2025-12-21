@@ -53,6 +53,7 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
           spreadsheetId: assignmentInfo.spreadsheetId,
           sheetId: assignmentInfo.gid,
           headerRowIndex: assignmentHeaderRowIndex,
+          detectMergedHeaders: true, // Enable Smart Fallback
         ),
       ),
       _getSheetHeadersUseCase(
@@ -60,6 +61,7 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
           spreadsheetId: followUpInfo.spreadsheetId,
           sheetId: followUpInfo.gid,
           headerRowIndex: followUpHeaderRowIndex,
+          detectMergedHeaders: false, // Standard behavior
         ),
       ),
     ]);

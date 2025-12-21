@@ -15,8 +15,9 @@ abstract interface class SheetsRemoteDataSource {
   Future<List<SheetColumnModel>> getSheetHeaders(
     String spreadsheetId,
     int? sheetId, // Changed from sheetIndex
-    int headerRowIndex,
-  );
+    int headerRowIndex, {
+    bool detectMergedHeaders = false,
+  });
 
   Future<List<StudentModel>> checkMissingAssignments({
     required String masterSheetId,
@@ -73,30 +74,62 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
   Future<List<SheetColumnModel>> getSheetHeaders(
     String spreadsheetId,
     int? sheetId,
-    int headerRowIndex,
-  ) async {
+    int headerRowIndex, {
+    bool detectMergedHeaders = false,
+  }) async {
     try {
       final sheetsApi = await _getSheetsApi();
       final sheetName = await _getSheetTitle(sheetsApi, spreadsheetId, sheetId);
 
-      final apiRow = headerRowIndex;
+      // Determine range based on detection flag
+      final startRow = detectMergedHeaders
+          ? (headerRowIndex > 1 ? headerRowIndex - 1 : 1)
+          : headerRowIndex;
+      final endRow = headerRowIndex;
 
       final response = await sheetsApi.spreadsheets.values.get(
         spreadsheetId,
-        '$sheetName!$apiRow:$apiRow',
+        '$sheetName!$startRow:$endRow',
       );
 
       final values = response.values;
       if (values == null || values.isEmpty) return [];
 
-      final headerRow = values.first;
+      List<dynamic> targetRow;
+      List<dynamic>? rowAbove;
+
+      // Values will contain 1 or 2 rows
+      if (detectMergedHeaders && headerRowIndex > 1 && values.length == 2) {
+        rowAbove = values[0];
+        targetRow = values[1];
+      } else {
+        // Fallback or standard behavior
+        targetRow = values.last;
+      }
+
       final columns = <SheetColumnModel>[];
 
-      for (int i = 0; i < headerRow.length; i++) {
-        columns.add(
-          SheetColumnModel.fromIndexedValue(i, headerRow[i].toString()),
-        );
+      for (int i = 0; i < targetRow.length; i++) {
+        String mainVal = targetRow[i].toString().trim();
+
+        if (detectMergedHeaders && rowAbove != null) {
+          String aboveVal = '';
+          if (rowAbove.length > i) {
+            aboveVal = rowAbove[i].toString().trim();
+          }
+
+          // Smart Fallback Logic:
+          // If main cell is empty BUT cell above is not empty -> Use cell above
+          if (mainVal.isEmpty && aboveVal.isNotEmpty) {
+            mainVal = aboveVal;
+          }
+        }
+
+        if (mainVal.isNotEmpty) {
+          columns.add(SheetColumnModel.fromIndexedValue(i, mainVal));
+        }
       }
+
       return columns;
     } catch (e) {
       throw SheetException('Failed to fetch headers: $e');

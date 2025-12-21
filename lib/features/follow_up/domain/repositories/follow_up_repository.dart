@@ -8,8 +8,9 @@ abstract interface class FollowUpRepository {
   Future<Either<Failure, List<SheetColumnEntity>>> getSheetHeaders(
     String spreadsheetId,
     int? sheetId,
-    int headerRowIndex,
-  );
+    int headerRowIndex, {
+    bool detectMergedHeaders = false,
+  });
 
   Future<Either<Failure, List<StudentEntity>>> checkMissingAssignments({
     required String masterSheetId,

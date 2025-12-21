@@ -27,13 +27,15 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
   Future<Either<Failure, List<SheetColumnEntity>>> getSheetHeaders(
     String spreadsheetId,
     int? sheetId,
-    int headerRowIndex,
-  ) async {
+    int headerRowIndex, {
+    bool detectMergedHeaders = false,
+  }) async {
     try {
       final columns = await _remoteDataSource.getSheetHeaders(
         spreadsheetId,
         sheetId,
         headerRowIndex,
+        detectMergedHeaders: detectMergedHeaders,
       );
       // Map Model -> Entity (simple casting if same structure or manual map)
       // Assuming SheetColumnModel extends SheetColumnEntity

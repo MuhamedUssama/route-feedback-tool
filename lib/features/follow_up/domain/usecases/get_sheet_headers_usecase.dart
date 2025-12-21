@@ -21,6 +21,7 @@ class GetSheetHeadersUseCase
       params.spreadsheetId,
       params.sheetId,
       params.headerRowIndex,
+      detectMergedHeaders: params.detectMergedHeaders,
     );
   }
 }
@@ -29,13 +30,20 @@ class GetSheetHeadersParams extends Equatable {
   final String spreadsheetId;
   final int? sheetId;
   final int headerRowIndex;
+  final bool detectMergedHeaders;
 
   const GetSheetHeadersParams({
     required this.spreadsheetId,
     required this.sheetId,
     required this.headerRowIndex,
+    this.detectMergedHeaders = false,
   });
 
   @override
-  List<Object?> get props => [spreadsheetId, sheetId, headerRowIndex];
+  List<Object?> get props => [
+    spreadsheetId,
+    sheetId,
+    headerRowIndex,
+    detectMergedHeaders,
+  ];
 }
