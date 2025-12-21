@@ -6,6 +6,7 @@ import '../../domain/entities/sheet_column_entity.dart';
 import '../../domain/entities/student_entity.dart';
 import '../../domain/entities/follow_up_config_entity.dart';
 import '../../domain/repositories/follow_up_repository.dart';
+import '../../domain/entities/assignment_analysis_result.dart';
 import '../datasources/follow_up_local_data_source.dart';
 import '../datasources/gmail_remote_data_source.dart';
 import '../datasources/sheets_remote_data_source.dart';
@@ -48,7 +49,7 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
   }
 
   @override
-  Future<Either<Failure, List<StudentEntity>>> checkMissingAssignments({
+  Future<Either<Failure, AssignmentAnalysisResult>> analyzeAssignmentStatus({
     required String masterSheetId,
     required int? masterSheetIdGid,
     required int masterHeaderRowIndex,
@@ -58,7 +59,7 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
     required int? currentSheetIdGid,
   }) async {
     try {
-      final students = await _remoteDataSource.checkMissingAssignments(
+      final result = await _remoteDataSource.analyzeAssignmentStatus(
         masterSheetId: masterSheetId,
         masterSheetIdGid: masterSheetIdGid,
         masterHeaderRowIndex: masterHeaderRowIndex,
@@ -67,7 +68,7 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
         currentSheetId: currentSheetId,
         currentSheetIdGid: currentSheetIdGid,
       );
-      return Right(students);
+      return Right(result);
     } on GoogleAuthException catch (e) {
       return Left(AuthFailure(e.message, e.type));
     } on SheetException catch (e) {

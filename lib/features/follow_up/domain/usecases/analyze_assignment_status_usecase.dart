@@ -3,22 +3,23 @@ import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../entities/student_entity.dart';
+
+import '../entities/assignment_analysis_result.dart';
 import '../repositories/follow_up_repository.dart';
 
 @lazySingleton
-@lazySingleton
-class CheckMissingAssignmentsUseCase
-    implements UseCase<List<StudentEntity>, CheckMissingAssignmentsParams> {
+class AnalyzeAssignmentStatusUseCase
+    implements
+        UseCase<AssignmentAnalysisResult, AnalyzeAssignmentStatusParams> {
   final FollowUpRepository _repository;
 
-  CheckMissingAssignmentsUseCase(this._repository);
+  AnalyzeAssignmentStatusUseCase(this._repository);
 
   @override
-  Future<Either<Failure, List<StudentEntity>>> call(
-    CheckMissingAssignmentsParams params,
+  Future<Either<Failure, AssignmentAnalysisResult>> call(
+    AnalyzeAssignmentStatusParams params,
   ) async {
-    return await _repository.checkMissingAssignments(
+    return await _repository.analyzeAssignmentStatus(
       masterSheetId: params.masterSheetId,
       masterSheetIdGid: params.masterSheetIdGid,
       masterHeaderRowIndex: params.masterHeaderRowIndex,
@@ -30,7 +31,7 @@ class CheckMissingAssignmentsUseCase
   }
 }
 
-class CheckMissingAssignmentsParams extends Equatable {
+class AnalyzeAssignmentStatusParams extends Equatable {
   final String masterSheetId;
   final int? masterSheetIdGid;
   final int masterHeaderRowIndex;
@@ -39,7 +40,7 @@ class CheckMissingAssignmentsParams extends Equatable {
   final String currentSheetId;
   final int? currentSheetIdGid;
 
-  const CheckMissingAssignmentsParams({
+  const AnalyzeAssignmentStatusParams({
     required this.masterSheetId,
     required this.masterSheetIdGid,
     required this.masterHeaderRowIndex,

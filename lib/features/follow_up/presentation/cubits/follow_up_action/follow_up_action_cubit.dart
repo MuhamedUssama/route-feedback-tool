@@ -6,7 +6,7 @@ import 'package:mentor_assistant/core/utils/sheet_utils.dart';
 import '../../../domain/entities/sheet_column_entity.dart';
 import '../../../domain/entities/student_entity.dart';
 import '../../../domain/entities/follow_up_config_entity.dart';
-import '../../../domain/usecases/check_missing_assignments_usecase.dart';
+import '../../../domain/usecases/analyze_assignment_status_usecase.dart';
 import '../../../domain/usecases/get_sheet_headers_usecase.dart';
 import '../../../domain/usecases/send_follow_up_email_usecase.dart';
 import '../../../domain/usecases/update_student_status_usecase.dart';
@@ -17,13 +17,13 @@ part 'follow_up_action_cubit.freezed.dart';
 @injectable
 class FollowUpActionCubit extends Cubit<FollowUpActionState> {
   final GetSheetHeadersUseCase _getSheetHeadersUseCase;
-  final CheckMissingAssignmentsUseCase _checkMissingAssignmentsUseCase;
+  final AnalyzeAssignmentStatusUseCase _analyzeAssignmentStatusUseCase;
   final SendFollowUpEmailUseCase _sendFollowUpEmailUseCase;
   final UpdateStudentStatusUseCase _updateStudentStatusUseCase;
 
   FollowUpActionCubit(
     this._getSheetHeadersUseCase,
-    this._checkMissingAssignmentsUseCase,
+    this._analyzeAssignmentStatusUseCase,
     this._sendFollowUpEmailUseCase,
     this._updateStudentStatusUseCase,
   ) : super(const FollowUpActionState.initial());
@@ -135,8 +135,8 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
       return;
     }
 
-    final result = await _checkMissingAssignmentsUseCase(
-      CheckMissingAssignmentsParams(
+    final result = await _analyzeAssignmentStatusUseCase(
+      AnalyzeAssignmentStatusParams(
         masterSheetId: masterInfo.spreadsheetId,
         masterSheetIdGid: masterInfo.gid,
         masterHeaderRowIndex: masterHeaderRowIndex,
@@ -149,19 +149,29 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
 
     result.fold(
       (failure) => emit(FollowUpActionState.error(failure.message)),
-      (students) => emit(FollowUpActionState.studentsLoaded(students)),
+      (analysis) => emit(
+        FollowUpActionState.studentsLoaded(
+          missingStudents: analysis.missingStudents,
+          submittedStudents: analysis.submittedStudents,
+        ),
+      ),
     );
   }
 
   Future<void> sendToSelectedStudents({
     required List<StudentEntity> students,
+    required List<StudentEntity> submittedStudents,
     required String assignmentName,
     required String spreadsheetUrl,
     required int statusColumnIndex,
+    required bool markSubmittedAsDone,
   }) async {
     final failedEmails = <String>[];
     int sentCount = 0;
-    final total = students.length;
+    int markedDoneCount = 0;
+    final total =
+        students.length + (markSubmittedAsDone ? submittedStudents.length : 0);
+    int currentProgress = 0;
 
     final sheetInfo = GoogleSheetUrlParser.parse(spreadsheetUrl);
     if (sheetInfo == null) {
@@ -169,14 +179,16 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
       return;
     }
 
-    for (int i = 0; i < total; i++) {
+    // 1. Send Emails to Missing Students
+    for (int i = 0; i < students.length; i++) {
+      currentProgress++;
       final student = students[i];
 
       // Update progress
       emit(
         FollowUpActionState.sendingProgress(
           total: total,
-          current: i + 1,
+          current: currentProgress,
           failedEmails: List.from(failedEmails),
         ),
       );
@@ -225,9 +237,42 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
       }
     }
 
+    // 2. Batch Mark Submitted Students as Done
+    if (markSubmittedAsDone) {
+      for (int i = 0; i < submittedStudents.length; i++) {
+        currentProgress++;
+        final student = submittedStudents[i];
+        // Update progress
+        emit(
+          FollowUpActionState.sendingProgress(
+            total: total,
+            current: currentProgress,
+            failedEmails: List.from(failedEmails),
+          ),
+        );
+
+        if (student.followUpRowNumber != null) {
+          // We can optimize this by doing batch updates if the API supports it,
+          // but for now reusing the usecase row by row is safer and easier to implement.
+          // We might want to throttle this slightly too if it's too fast,
+          // but usually sheet updates are okay.
+          await _updateStudentStatusUseCase(
+            UpdateStudentStatusParams(
+              spreadsheetId: sheetInfo.spreadsheetId,
+              rowIndex: student.followUpRowNumber!,
+              statusColumnIndex: statusColumnIndex,
+              action: FollowUpAction.markedAsDone,
+              sheetId: sheetInfo.gid,
+            ),
+          );
+          markedDoneCount++;
+        }
+      }
+    }
+
     emit(
       FollowUpActionState.success(
-        'Sent: $sentCount, Failed: ${failedEmails.length}',
+        'Sent: $sentCount, Marked Done: $markedDoneCount, Failed: ${failedEmails.length}',
       ),
     );
   }

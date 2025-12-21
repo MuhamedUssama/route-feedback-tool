@@ -228,7 +228,7 @@ class _FollowUpFilterHeaderState extends State<FollowUpFilterHeader> {
                     followUpHeaders = fUpHeaders;
                     showDropdowns = true;
                   },
-                  studentsLoaded: (_) {
+                  studentsLoaded: (_, _) {
                     // Logic to keep headers logic visible would require complex state or separate cubit properties.
                     // For now, based on strict request, we just react to headersLoaded.
                     // If user re-enters page, they follow flow.

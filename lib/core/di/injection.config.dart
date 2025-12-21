@@ -36,8 +36,8 @@ import '../../features/follow_up/data/repositories/follow_up_repository_impl.dar
     as _i826;
 import '../../features/follow_up/domain/repositories/follow_up_repository.dart'
     as _i934;
-import '../../features/follow_up/domain/usecases/check_missing_assignments_usecase.dart'
-    as _i306;
+import '../../features/follow_up/domain/usecases/analyze_assignment_status_usecase.dart'
+    as _i309;
 import '../../features/follow_up/domain/usecases/get_follow_up_config_usecase.dart'
     as _i68;
 import '../../features/follow_up/domain/usecases/get_sheet_headers_usecase.dart'
@@ -114,9 +114,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i48.LogoutUseCase>(
       () => _i48.LogoutUseCase(gh<_i787.AuthRepository>()),
     );
-    gh.lazySingleton<_i306.CheckMissingAssignmentsUseCase>(
+    gh.lazySingleton<_i309.AnalyzeAssignmentStatusUseCase>(
       () =>
-          _i306.CheckMissingAssignmentsUseCase(gh<_i934.FollowUpRepository>()),
+          _i309.AnalyzeAssignmentStatusUseCase(gh<_i934.FollowUpRepository>()),
     );
     gh.lazySingleton<_i68.GetFollowUpConfigUseCase>(
       () => _i68.GetFollowUpConfigUseCase(gh<_i934.FollowUpRepository>()),
@@ -142,7 +142,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i320.FollowUpActionCubit>(
       () => _i320.FollowUpActionCubit(
         gh<_i578.GetSheetHeadersUseCase>(),
-        gh<_i306.CheckMissingAssignmentsUseCase>(),
+        gh<_i309.AnalyzeAssignmentStatusUseCase>(),
         gh<_i847.SendFollowUpEmailUseCase>(),
         gh<_i880.UpdateStudentStatusUseCase>(),
       ),

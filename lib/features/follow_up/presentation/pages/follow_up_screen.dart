@@ -42,6 +42,7 @@ class _FollowUpViewState extends State<_FollowUpView> {
   int? _statusCol;
 
   List<StudentEntity> _selectedStudents = [];
+  List<StudentEntity> _submittedStudents = [];
 
   @override
   void initState() {
@@ -75,15 +76,18 @@ class _FollowUpViewState extends State<_FollowUpView> {
             'You are about to send follow-up emails to ${_selectedStudents.length} students. This action cannot be undone.',
         isDangerous: true,
         confirmText: 'SEND EMAILS',
-        onConfirm: () {
+        showCheckbox: _submittedStudents.isNotEmpty,
+        checkboxLabel:
+            'Also mark ${_submittedStudents.length} submitted students as "Done"',
+        onConfirm: (markSubmittedAsDone) {
           Navigator.of(ctx).pop();
-          _sendEmails();
+          _sendEmails(markSubmittedAsDone);
         },
       ),
     );
   }
 
-  Future<void> _sendEmails() async {
+  Future<void> _sendEmails(bool markSubmittedAsDone) async {
     final configState = context.read<FollowUpConfigCubit>().state;
     final spreadsheetUrl = configState.maybeWhen(
       configLoaded: (config) => config.followUpSheetUrl,
@@ -102,9 +106,15 @@ class _FollowUpViewState extends State<_FollowUpView> {
 
     context.read<FollowUpActionCubit>().sendToSelectedStudents(
       students: _selectedStudents,
-      assignmentName: _selectedStudents.first.missingAssignmentName,
+      submittedStudents: _submittedStudents,
+      assignmentName: _selectedStudents.isNotEmpty
+          ? _selectedStudents.first.missingAssignmentName
+          : (_submittedStudents.isNotEmpty
+                ? _submittedStudents.first.missingAssignmentName
+                : 'Assignment'),
       spreadsheetUrl: spreadsheetUrl,
       statusColumnIndex: _statusCol!,
+      markSubmittedAsDone: markSubmittedAsDone,
     );
   }
 
@@ -192,6 +202,12 @@ class _FollowUpViewState extends State<_FollowUpView> {
                 'Operation Failed',
                 msg,
               ),
+              studentsLoaded: (missing, submitted) {
+                // Determine if mounted check needed
+                setState(() {
+                  _submittedStudents = submitted;
+                });
+              },
             );
           },
         ),
@@ -309,14 +325,24 @@ class _FollowUpViewState extends State<_FollowUpView> {
                         ],
                       ),
                     ),
-                    studentsLoaded: (students) => StudentDataTable(
-                      students: students,
-                      onSelectionChanged: (selected) {
-                        setState(() {
-                          _selectedStudents = selected;
-                        });
-                      },
-                    ),
+                    studentsLoaded: (missing, submitted) {
+                      // Schedule store update if needed (avoiding setstate during build)
+                      // Ideally we should use a Listener for side effects like updating local variables
+                      // But for now, we can just use the provided list for the table.
+
+                      // NOTE: Storing submitted in variable here is unsafe during build.
+                      // Moving side effect to BlocListener or just using state data.
+                      // Since we use _submittedStudents in dialog, we need to capture it.
+                      // Best practice: Use BlocListener for side effects.
+                      return StudentDataTable(
+                        students: missing,
+                        onSelectionChanged: (selected) {
+                          setState(() {
+                            _selectedStudents = selected;
+                          });
+                        },
+                      );
+                    },
                     // If sending, we could ideally keep the list visible.
                     // For now, we return empty or could potentially store state differently.
                     // Given strict requirements, shrinking is safe to avoid state loss crashes
@@ -330,6 +356,7 @@ class _FollowUpViewState extends State<_FollowUpView> {
             // Footer
             FollowUpActionFooter(
               selectedCount: _selectedStudents.length,
+              submittedCount: _submittedStudents.length,
               onSendPressed: () => _showConfirmationDialog(context),
             ),
           ],

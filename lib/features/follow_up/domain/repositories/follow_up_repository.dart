@@ -3,6 +3,7 @@ import '../../../../core/errors/failures.dart';
 import '../entities/sheet_column_entity.dart';
 import '../entities/student_entity.dart';
 import '../entities/follow_up_config_entity.dart';
+import '../entities/assignment_analysis_result.dart';
 
 abstract interface class FollowUpRepository {
   Future<Either<Failure, List<SheetColumnEntity>>> getSheetHeaders(
@@ -12,7 +13,7 @@ abstract interface class FollowUpRepository {
     bool detectMergedHeaders = false,
   });
 
-  Future<Either<Failure, List<StudentEntity>>> checkMissingAssignments({
+  Future<Either<Failure, AssignmentAnalysisResult>> analyzeAssignmentStatus({
     required String masterSheetId,
     required int? masterSheetIdGid,
     required int masterHeaderRowIndex,

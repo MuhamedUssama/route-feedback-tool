@@ -9,9 +9,10 @@ class FollowUpActionState with _$FollowUpActionState {
     required List<SheetColumnEntity> followUpHeaders,
   }) = _HeadersLoaded;
   const factory FollowUpActionState.loadingStudents() = _LoadingStudents;
-  const factory FollowUpActionState.studentsLoaded(
-    List<StudentEntity> students,
-  ) = _StudentsLoaded;
+  const factory FollowUpActionState.studentsLoaded({
+    required List<StudentEntity> missingStudents,
+    required List<StudentEntity> submittedStudents,
+  }) = _StudentsLoaded;
   const factory FollowUpActionState.sendingProgress({
     required int total,
     required int current,

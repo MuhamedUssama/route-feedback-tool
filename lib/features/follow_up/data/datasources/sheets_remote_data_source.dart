@@ -10,6 +10,7 @@ import '../../../../core/network/google_auth_client.dart';
 import '../models/sheet_column_model.dart';
 import '../models/student_model.dart';
 import '../../domain/entities/follow_up_config_entity.dart';
+import '../../domain/entities/assignment_analysis_result.dart';
 
 abstract interface class SheetsRemoteDataSource {
   Future<List<SheetColumnModel>> getSheetHeaders(
@@ -19,7 +20,7 @@ abstract interface class SheetsRemoteDataSource {
     bool detectMergedHeaders = false,
   });
 
-  Future<List<StudentModel>> checkMissingAssignments({
+  Future<AssignmentAnalysisResult> analyzeAssignmentStatus({
     required String masterSheetId,
     required int? masterSheetIdGid, // Changed from masterSheetIndex
     required int masterHeaderRowIndex,
@@ -137,7 +138,7 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
   }
 
   @override
-  Future<List<StudentModel>> checkMissingAssignments({
+  Future<AssignmentAnalysisResult> analyzeAssignmentStatus({
     required String masterSheetId,
     required int? masterSheetIdGid,
     required int masterHeaderRowIndex,
@@ -163,7 +164,12 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       );
 
       final masterRows = masterResponse.values;
-      if (masterRows == null || masterRows.isEmpty) return [];
+      if (masterRows == null || masterRows.isEmpty) {
+        return const AssignmentAnalysisResult(
+          missingStudents: [],
+          submittedStudents: [],
+        );
+      }
 
       // 2. Map Master Headers (Dynamic Column Finding)
       final headerRow = masterRows[0]
@@ -274,6 +280,7 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       }
 
       final missingStudents = <StudentModel>[];
+      final submittedStudents = <StudentModel>[];
 
       // 4. Iterate Rows (Start from index 1 to skip header)
       for (int i = 1; i < masterRows.length; i++) {
@@ -288,29 +295,30 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
           }
         }
 
-        bool isMissing = cellValue.isEmpty;
+        bool hasSubmitted = cellValue.isNotEmpty;
 
-        if (isMissing) {
-          try {
-            // Robust Extraction
-            String nameRaw = row.length > nameIndex
-                ? row[nameIndex].toString()
-                : '';
-            String emailRaw = row.length > emailIndex
-                ? row[emailIndex].toString()
-                : '';
+        try {
+          // Robust Extraction
+          String nameRaw = row.length > nameIndex
+              ? row[nameIndex].toString()
+              : '';
+          String emailRaw = row.length > emailIndex
+              ? row[emailIndex].toString()
+              : '';
 
-            // Safety Checks: Trim and Validate
-            final name = nameRaw.trim();
-            final email = emailRaw.trim();
+          // Safety Checks: Trim and Validate
+          final name = nameRaw.trim();
+          final email = emailRaw.trim();
 
-            bool isValidStudent = name.isNotEmpty && email.isNotEmpty;
+          bool isValidStudent = name.isNotEmpty && email.isNotEmpty;
 
-            if (isValidStudent) {
-              // Check if email exists in local map
-              if (localEmailToRowMap.containsKey(email.toLowerCase())) {
-                final followUpRow = localEmailToRowMap[email.toLowerCase()];
+          if (isValidStudent) {
+            // Check if email exists in local map
+            if (localEmailToRowMap.containsKey(email.toLowerCase())) {
+              final followUpRow = localEmailToRowMap[email.toLowerCase()];
 
+              if (!hasSubmitted) {
+                // MISSING STUDENT
                 final student = StudentModel(
                   name: name,
                   email: email,
@@ -321,20 +329,35 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
                   isSelected: true,
                 );
                 missingStudents.add(student);
+              } else {
+                // SUBMITTED STUDENT
+                final student = StudentModel(
+                  name: name,
+                  email: email,
+                  status: 'Submitted',
+                  missingAssignmentName: assignmentName,
+                  rowNumber: apiStartRow + i,
+                  followUpRowNumber: followUpRow,
+                  isSelected: false, // Not selected by default for emailing
+                );
+                submittedStudents.add(student);
               }
             }
-          } catch (e) {
-            if (kDebugMode) {
-              print('Checking Error Exception: $e');
-            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Checking Error Exception: $e');
           }
         }
       }
 
-      return missingStudents;
+      return AssignmentAnalysisResult(
+        missingStudents: missingStudents,
+        submittedStudents: submittedStudents,
+      );
     } catch (e) {
       if (e is SheetException) rethrow;
-      throw SheetException('Failed to check assignments: $e');
+      throw SheetException('Failed to analyze assignment status: $e');
     }
   }
 

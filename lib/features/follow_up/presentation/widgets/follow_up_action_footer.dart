@@ -5,11 +5,13 @@ import '../../presentation/cubits/follow_up_action/follow_up_action_cubit.dart';
 
 class FollowUpActionFooter extends StatelessWidget {
   final int selectedCount;
+  final int submittedCount;
   final VoidCallback onSendPressed;
 
   const FollowUpActionFooter({
     super.key,
     required this.selectedCount,
+    this.submittedCount = 0,
     required this.onSendPressed,
   });
 
@@ -44,14 +46,14 @@ class FollowUpActionFooter extends StatelessWidget {
 
   Widget _buildSendButton(BuildContext context) {
     final theme = Theme.of(context);
-    final isEnabled = selectedCount > 0;
+    final isEnabled = selectedCount > 0 || submittedCount > 0;
 
     return SizedBox(
       width: double.infinity,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          if (isEnabled)
+          if (selectedCount > 0)
             Text(
               '$selectedCount students selected',
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -59,6 +61,14 @@ class FollowUpActionFooter extends StatelessWidget {
                 color: theme.colorScheme.primary,
               ),
             ).animate().fadeIn().slideX(begin: 0.2, end: 0),
+          if (selectedCount > 0 && submittedCount > 0)
+            Text(
+              ' + $submittedCount submitted',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ).animate().fadeIn().slideX(begin: 0.2, end: 0),
+
           const SizedBox(width: 24),
           ElevatedButton.icon(
             onPressed: isEnabled ? onSendPressed : null,
@@ -66,7 +76,11 @@ class FollowUpActionFooter extends StatelessWidget {
               minimumSize: const Size(0, 56), // Override infinite width
             ),
             icon: const Icon(Icons.send_rounded, size: 20),
-            label: const Text('SEND FOLLOW-UP EMAILS'),
+            label: Text(
+              selectedCount > 0
+                  ? 'SEND FOLLOW-UP EMAILS'
+                  : 'SYNC SUBMITTED STATUS',
+            ),
           ),
         ],
       ),
