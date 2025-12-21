@@ -7,6 +7,7 @@ import '../../domain/entities/student_entity.dart';
 import '../../domain/entities/follow_up_config_entity.dart';
 import '../../domain/repositories/follow_up_repository.dart';
 import '../../domain/entities/assignment_analysis_result.dart';
+import '../../data/models/student_status_update_model.dart';
 import '../datasources/follow_up_local_data_source.dart';
 import '../datasources/gmail_remote_data_source.dart';
 import '../datasources/sheets_remote_data_source.dart';
@@ -111,6 +112,26 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
         statusColumnIndex: statusColumnIndex,
         action: action,
         sheetId: sheetId,
+      );
+      return const Right(null);
+    } on GoogleAuthException catch (e) {
+      return Left(AuthFailure(e.message, e.type));
+    } on SheetException catch (e) {
+      return Left(Failure.sheet(e.message));
+    } catch (e) {
+      return Left(Failure.unexpected(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> batchUpdateStudentStatus({
+    required String spreadsheetId,
+    required List<StudentStatusUpdateModel> updates,
+  }) async {
+    try {
+      await _remoteDataSource.batchUpdateStatus(
+        spreadsheetId: spreadsheetId,
+        updates: updates,
       );
       return const Right(null);
     } on GoogleAuthException catch (e) {

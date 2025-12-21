@@ -3,6 +3,7 @@ import '../../../../core/errors/failures.dart';
 import '../entities/sheet_column_entity.dart';
 import '../entities/student_entity.dart';
 import '../entities/follow_up_config_entity.dart';
+import '../../data/models/student_status_update_model.dart';
 import '../entities/assignment_analysis_result.dart';
 
 abstract interface class FollowUpRepository {
@@ -38,5 +39,10 @@ abstract interface class FollowUpRepository {
     required int statusColumnIndex,
     required FollowUpAction action,
     int? sheetId,
+  });
+
+  Future<Either<Failure, void>> batchUpdateStudentStatus({
+    required String spreadsheetId,
+    required List<StudentStatusUpdateModel> updates,
   });
 }

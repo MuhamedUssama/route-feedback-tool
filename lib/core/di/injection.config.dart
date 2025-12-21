@@ -38,6 +38,8 @@ import '../../features/follow_up/domain/repositories/follow_up_repository.dart'
     as _i934;
 import '../../features/follow_up/domain/usecases/analyze_assignment_status_usecase.dart'
     as _i309;
+import '../../features/follow_up/domain/usecases/batch_update_student_status_usecase.dart'
+    as _i1072;
 import '../../features/follow_up/domain/usecases/get_follow_up_config_usecase.dart'
     as _i68;
 import '../../features/follow_up/domain/usecases/get_sheet_headers_usecase.dart'
@@ -118,6 +120,11 @@ extension GetItInjectableX on _i174.GetIt {
       () =>
           _i309.AnalyzeAssignmentStatusUseCase(gh<_i934.FollowUpRepository>()),
     );
+    gh.lazySingleton<_i1072.BatchUpdateStudentStatusUseCase>(
+      () => _i1072.BatchUpdateStudentStatusUseCase(
+        gh<_i934.FollowUpRepository>(),
+      ),
+    );
     gh.lazySingleton<_i68.GetFollowUpConfigUseCase>(
       () => _i68.GetFollowUpConfigUseCase(gh<_i934.FollowUpRepository>()),
     );
@@ -145,6 +152,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i309.AnalyzeAssignmentStatusUseCase>(),
         gh<_i847.SendFollowUpEmailUseCase>(),
         gh<_i880.UpdateStudentStatusUseCase>(),
+        gh<_i1072.BatchUpdateStudentStatusUseCase>(),
       ),
     );
     gh.factory<_i117.AuthCubit>(

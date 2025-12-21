@@ -11,6 +11,7 @@ import '../models/sheet_column_model.dart';
 import '../models/student_model.dart';
 import '../../domain/entities/follow_up_config_entity.dart';
 import '../../domain/entities/assignment_analysis_result.dart';
+import '../models/student_status_update_model.dart';
 
 abstract interface class SheetsRemoteDataSource {
   Future<List<SheetColumnModel>> getSheetHeaders(
@@ -36,6 +37,11 @@ abstract interface class SheetsRemoteDataSource {
     required int statusColumnIndex,
     required FollowUpAction action,
     int? sheetId, // Added optional GID
+  });
+
+  Future<void> batchUpdateStatus({
+    required String spreadsheetId,
+    required List<StudentStatusUpdateModel> updates,
   });
 }
 
@@ -449,11 +455,85 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
     }
   }
 
-  Color googleColorFrom(color.Color c) {
+  @override
+  Future<void> batchUpdateStatus({
+    required String spreadsheetId,
+    required List<StudentStatusUpdateModel> updates,
+  }) async {
+    if (updates.isEmpty) return;
+
+    try {
+      final sheetsApi = await _getSheetsApi();
+
+      // OPTIMIZATION: If sheetId is missing in updates, we might need to fetch it.
+      // However, our logic assumes we have it from existing flow (StudentModel has followUpRowNumber mapped).
+      // If we don't have sheetId (GID), we must fetch it once.
+      int? defaultSheetId;
+      if (updates.any((u) => u.sheetId == null)) {
+        final meta = await sheetsApi.spreadsheets.get(spreadsheetId);
+        defaultSheetId = meta.sheets![0].properties!.sheetId!;
+      }
+
+      final requests = <Request>[];
+
+      for (final update in updates) {
+        final targetGid = update.sheetId ?? defaultSheetId!;
+        String statusText;
+        color.Color statusColor;
+
+        switch (update.action) {
+          case FollowUpAction.sent:
+            statusText = 'Email Sent';
+            statusColor = const color.Color(0xFFFFCDD2); // Red 100
+            break;
+          case FollowUpAction.markedAsDone:
+            statusText = 'Done';
+            statusColor = const color.Color(0xFFC8E6C9); // Green 100
+            break;
+        }
+
+        // Create UpdateCellsRequest for this specific cell
+        requests.add(
+          Request(
+            updateCells: UpdateCellsRequest(
+              start: GridCoordinate(
+                sheetId: targetGid,
+                rowIndex: update.rowIndex - 1, // 0-based
+                columnIndex: update.statusColumnIndex, // 0-based
+              ),
+              rows: [
+                RowData(
+                  values: [
+                    CellData(
+                      userEnteredValue: ExtendedValue(stringValue: statusText),
+                      userEnteredFormat: CellFormat(
+                        backgroundColor: googleColorFrom(statusColor),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              fields: 'userEnteredValue,userEnteredFormat.backgroundColor',
+            ),
+          ),
+        );
+      }
+
+      // Execute Batch Request
+      await sheetsApi.spreadsheets.batchUpdate(
+        BatchUpdateSpreadsheetRequest(requests: requests),
+        spreadsheetId,
+      );
+    } catch (e) {
+      throw SheetException('Failed to batch update statuses: $e');
+    }
+  }
+
+  Color googleColorFrom(color.Color color) {
     return Color(
-      red: (c.r * 255.0).round().clamp(0, 255) / 255.0,
-      green: (c.g * 255.0).round().clamp(0, 255) / 255.0,
-      blue: (c.b * 255.0).round().clamp(0, 255) / 255.0,
+      red: (color.r * 255.0).round().clamp(0, 255) / 255.0,
+      green: (color.g * 255.0).round().clamp(0, 255) / 255.0,
+      blue: (color.b * 255.0).round().clamp(0, 255) / 255.0,
     );
   }
 

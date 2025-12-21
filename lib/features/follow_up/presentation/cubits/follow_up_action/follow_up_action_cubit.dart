@@ -10,6 +10,8 @@ import '../../../domain/usecases/analyze_assignment_status_usecase.dart';
 import '../../../domain/usecases/get_sheet_headers_usecase.dart';
 import '../../../domain/usecases/send_follow_up_email_usecase.dart';
 import '../../../domain/usecases/update_student_status_usecase.dart';
+import '../../../domain/usecases/batch_update_student_status_usecase.dart';
+import '../../../data/models/student_status_update_model.dart';
 
 part 'follow_up_action_state.dart';
 part 'follow_up_action_cubit.freezed.dart';
@@ -20,12 +22,14 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
   final AnalyzeAssignmentStatusUseCase _analyzeAssignmentStatusUseCase;
   final SendFollowUpEmailUseCase _sendFollowUpEmailUseCase;
   final UpdateStudentStatusUseCase _updateStudentStatusUseCase;
+  final BatchUpdateStudentStatusUseCase _batchUpdateStudentStatusUseCase;
 
   FollowUpActionCubit(
     this._getSheetHeadersUseCase,
     this._analyzeAssignmentStatusUseCase,
     this._sendFollowUpEmailUseCase,
     this._updateStudentStatusUseCase,
+    this._batchUpdateStudentStatusUseCase,
   ) : super(const FollowUpActionState.initial());
 
   Future<void> fetchSetupData({
@@ -239,10 +243,53 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
 
     // 2. Batch Mark Submitted Students as Done
     if (markSubmittedAsDone) {
-      for (int i = 0; i < submittedStudents.length; i++) {
-        currentProgress++;
-        final student = submittedStudents[i];
-        // Update progress
+      final validSubmitted = submittedStudents
+          .where((s) => s.followUpRowNumber != null)
+          .toList();
+
+      // If we have invalid ones, we could log them or add to failedEmails.
+      // For now, let's just count them as processed to finish progress bar.
+      final skippedCount = submittedStudents.length - validSubmitted.length;
+      if (skippedCount > 0) {
+        currentProgress += skippedCount;
+        failedEmails.add('$skippedCount students skipped (Missing Row Number)');
+      }
+
+      const chunkSize = 50;
+      for (int i = 0; i < validSubmitted.length; i += chunkSize) {
+        final end = (i + chunkSize < validSubmitted.length)
+            ? i + chunkSize
+            : validSubmitted.length;
+        final chunk = validSubmitted.sublist(i, end);
+
+        final updates = chunk.map((student) {
+          return StudentStatusUpdateModel(
+            rowIndex: student.followUpRowNumber!,
+            statusColumnIndex: statusColumnIndex,
+            action: FollowUpAction.markedAsDone,
+            sheetId: sheetInfo.gid,
+          );
+        }).toList();
+
+        final result = await _batchUpdateStudentStatusUseCase(
+          BatchUpdateStudentStatusParams(
+            spreadsheetId: sheetInfo.spreadsheetId,
+            updates: updates,
+          ),
+        );
+
+        result.fold(
+          (failure) {
+            failedEmails.add(
+              'Batch Update Failed for ${chunk.length} students: ${failure.message}',
+            );
+          },
+          (_) {
+            markedDoneCount += chunk.length;
+          },
+        );
+
+        currentProgress += chunk.length;
         emit(
           FollowUpActionState.sendingProgress(
             total: total,
@@ -250,23 +297,6 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
             failedEmails: List.from(failedEmails),
           ),
         );
-
-        if (student.followUpRowNumber != null) {
-          // We can optimize this by doing batch updates if the API supports it,
-          // but for now reusing the usecase row by row is safer and easier to implement.
-          // We might want to throttle this slightly too if it's too fast,
-          // but usually sheet updates are okay.
-          await _updateStudentStatusUseCase(
-            UpdateStudentStatusParams(
-              spreadsheetId: sheetInfo.spreadsheetId,
-              rowIndex: student.followUpRowNumber!,
-              statusColumnIndex: statusColumnIndex,
-              action: FollowUpAction.markedAsDone,
-              sheetId: sheetInfo.gid,
-            ),
-          );
-          markedDoneCount++;
-        }
       }
     }
 
