@@ -102,7 +102,7 @@ class _FollowUpViewState extends State<_FollowUpView> {
 
     context.read<FollowUpActionCubit>().sendToSelectedStudents(
       students: _selectedStudents,
-      assignmentName: 'Required Assignment', // Could be dynamic later
+      assignmentName: _selectedStudents.first.missingAssignmentName,
       spreadsheetUrl: spreadsheetUrl,
       statusColumnIndex: _statusCol!,
     );

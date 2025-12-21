@@ -76,6 +76,9 @@ class GmailRemoteDataSourceImpl implements GmailRemoteDataSource {
       'MIME-Version: 1.0',
       'Content-Type: text/html; charset=utf-8',
       'Content-Transfer-Encoding: base64',
+      'Importance: High',
+      'X-Priority: 1',
+      'X-MSMail-Priority: High',
       '',
       encodedBody,
     ];
@@ -90,20 +93,39 @@ class GmailRemoteDataSourceImpl implements GmailRemoteDataSource {
     String mentorName,
   ) {
     return '''
-      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px;">
-        <h1>Test Email</h1>
-        <p>Dear <strong>$studentName</strong>,</p>
-        <p>I hope this email finds you well.</p>
-        <p>We noticed that we haven't received your submission for 
-           <span style="background-color: #ffebee; color: #c62828; padding: 3px 6px; border-radius: 4px; font-weight: bold;">
-             $assignmentName
-           </span> yet.
-        </p>
-        <div style="background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin: 20px 0;">
-          <strong>Important:</strong> Staying on track is crucial. Please submit ASAP.
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #2c3e50; line-height: 1.6; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        
+        <div style="background-color: #0d47a1; padding: 20px; text-align: center;">
+          <h2 style="color: white; margin: 0; font-size: 20px;">Action Required: Missing Submission</h2>
         </div>
-        <p>Best Regards,</p>
-        <p><strong>Eng. $mentorName</strong></p>
+
+        <div style="padding: 30px;">
+          <p style="font-size: 16px;">Hi <strong>$studentName</strong>,</p>
+          
+          <p>I hope you are doing well.</p>
+          
+          <p>This is a gentle reminder that we have not yet received your submission for:</p>
+          
+          <div style="text-align: center; margin: 25px 0;">
+            <span style="background-color: #fce4ec; color: #c2185b; padding: 10px 20px; border-radius: 16px; font-weight: bold; font-size: 16px; border: 1px solid #f8bbd0;">
+              $assignmentName
+            </span>
+          </div>
+
+          <p>If you are facing any technical issues or need clarification on the task, please let me know.</p>
+
+          <div style="background-color: #e3f2fd; border-left: 4px solid #1976d2; padding: 15px; margin: 20px 0; font-size: 14px; color: #0d47a1;">
+            <strong>Note:</strong> Consistent practice is key to mastering Flutter. Please submit your work as soon as possible to keep up with the schedule.
+          </div>
+
+          <p style="margin-top: 30px;">Best Regards,</p>
+          <p style="font-size: 16px; font-weight: bold; color: #0d47a1;">Eng. $mentorName</p>
+        </div>
+        
+        <div style="background-color: #f5f5f5; padding: 10px; text-align: center; font-size: 12px; color: #7f8c8d;">
+          Please reply to this email if you have any questions or need further assistance.
+        </div>
+
       </div>
     ''';
   }
