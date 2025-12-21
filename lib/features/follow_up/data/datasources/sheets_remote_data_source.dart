@@ -252,13 +252,26 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
         '$localSheetName!$localEmailColLetter:$localEmailColLetter',
       );
 
-      final localEmails =
-          localEmailsResponse.values
-              ?.expand((e) => e)
-              .map((e) => e.toString().trim().toLowerCase())
-              .where((e) => e.isNotEmpty) // Stop empty email matching
-              .toSet() ??
-          {};
+      // Create a Map<Email, RowIndex>
+      // API returns rows starting from row 1.
+      final localEmailToRowMap = <String, int>{};
+      final localValues = localEmailsResponse.values;
+
+      if (localValues != null) {
+        for (int i = 0; i < localValues.length; i++) {
+          // Check if row has data
+          if (localValues[i].isNotEmpty) {
+            final email = localValues[i][0].toString().trim().toLowerCase();
+            if (email.isNotEmpty) {
+              // Row Index Calculation:
+              // i is 0-based index from the response.
+              // Response starts from row 1 (since we fetched entire column).
+              // So Row Number = i + 1.
+              localEmailToRowMap[email] = i + 1;
+            }
+          }
+        }
+      }
 
       final missingStudents = <StudentModel>[];
 
@@ -294,15 +307,17 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
             bool isValidStudent = name.isNotEmpty && email.isNotEmpty;
 
             if (isValidStudent) {
-              // Only check alignment if email is in local emails
-              // Logic check: The requirement is Missing AND in Local Sheet
-              if (localEmails.contains(email.toLowerCase())) {
+              // Check if email exists in local map
+              if (localEmailToRowMap.containsKey(email.toLowerCase())) {
+                final followUpRow = localEmailToRowMap[email.toLowerCase()];
+
                 final student = StudentModel(
                   name: name,
                   email: email,
                   status: 'Missing',
                   missingAssignmentName: assignmentName,
-                  rowNumber: apiStartRow + i,
+                  rowNumber: apiStartRow + i, // Assignment Sheet Row
+                  followUpRowNumber: followUpRow, // Follow Up Sheet Row
                   isSelected: true,
                 );
                 missingStudents.add(student);

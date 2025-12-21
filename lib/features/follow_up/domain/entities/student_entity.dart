@@ -7,6 +7,7 @@ class StudentEntity extends Equatable {
   final bool isSelected;
   final String missingAssignmentName;
   final int rowNumber;
+  final int? followUpRowNumber;
 
   const StudentEntity({
     required this.name,
@@ -15,6 +16,7 @@ class StudentEntity extends Equatable {
     this.isSelected = false,
     required this.missingAssignmentName,
     required this.rowNumber,
+    this.followUpRowNumber,
   });
 
   StudentEntity copyWith({
@@ -24,6 +26,7 @@ class StudentEntity extends Equatable {
     bool? isSelected,
     String? missingAssignmentName,
     int? rowNumber,
+    int? followUpRowNumber,
   }) {
     return StudentEntity(
       name: name ?? this.name,
@@ -33,6 +36,7 @@ class StudentEntity extends Equatable {
       missingAssignmentName:
           missingAssignmentName ?? this.missingAssignmentName,
       rowNumber: rowNumber ?? this.rowNumber,
+      followUpRowNumber: followUpRowNumber ?? this.followUpRowNumber,
     );
   }
 
@@ -44,5 +48,6 @@ class StudentEntity extends Equatable {
     isSelected,
     missingAssignmentName,
     rowNumber,
+    followUpRowNumber,
   ];
 }

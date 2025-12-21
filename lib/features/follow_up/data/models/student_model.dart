@@ -8,6 +8,7 @@ class StudentModel extends StudentEntity {
     super.isSelected,
     required super.missingAssignmentName,
     required super.rowNumber,
+    super.followUpRowNumber,
   });
 
   factory StudentModel.fromRow({
@@ -16,6 +17,7 @@ class StudentModel extends StudentEntity {
     required Map<String, int> headersMap,
     required int gradeColumnIndex,
     required String assignmentName,
+    int? followUpRowIndex,
   }) {
     // Helper function to safely get cell value
     String getCell(int index) {
@@ -39,6 +41,7 @@ class StudentModel extends StudentEntity {
       isSelected: isMissing,
       missingAssignmentName: assignmentName,
       rowNumber: rowIndex,
+      followUpRowNumber: followUpRowIndex,
     );
   }
 }

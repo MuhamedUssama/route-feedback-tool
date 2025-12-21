@@ -183,7 +183,7 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
 
       // Throttling
       if (i > 0) {
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(milliseconds: 1500));
       }
 
       // Send Email
@@ -207,15 +207,21 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
 
       // Status Update (Only if email sent successfully)
       if (emailSent) {
-        await _updateStudentStatusUseCase(
-          UpdateStudentStatusParams(
-            spreadsheetId: sheetInfo.spreadsheetId,
-            rowIndex: student.rowNumber,
-            statusColumnIndex: statusColumnIndex,
-            action: FollowUpAction.sent,
-            sheetId: sheetInfo.gid,
-          ),
-        );
+        if (student.followUpRowNumber != null) {
+          await _updateStudentStatusUseCase(
+            UpdateStudentStatusParams(
+              spreadsheetId: sheetInfo.spreadsheetId,
+              rowIndex: student.followUpRowNumber!,
+              statusColumnIndex: statusColumnIndex,
+              action: FollowUpAction.sent,
+              sheetId: sheetInfo.gid,
+            ),
+          );
+        } else {
+          failedEmails.add(
+            '${student.email} (Status Update Failed: Row Unknown)',
+          );
+        }
       }
     }
 
