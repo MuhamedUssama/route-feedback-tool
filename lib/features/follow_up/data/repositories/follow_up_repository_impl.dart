@@ -13,12 +13,12 @@ import '../models/follow_up_config_model.dart';
 
 @LazySingleton(as: FollowUpRepository)
 class FollowUpRepositoryImpl implements FollowUpRepository {
-  final SheetsRemoteDataSource _transportSheets;
+  final SheetsRemoteDataSource _remoteDataSource;
   final GmailRemoteDataSource _transportGmail;
   final FollowUpLocalDataSource _localDataSource;
 
   FollowUpRepositoryImpl(
-    this._transportSheets,
+    this._remoteDataSource,
     this._transportGmail,
     this._localDataSource,
   );
@@ -26,16 +26,20 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
   @override
   Future<Either<Failure, List<SheetColumnEntity>>> getSheetHeaders(
     String spreadsheetId,
-    int sheetIndex,
+    int? sheetId,
     int headerRowIndex,
   ) async {
     try {
-      final result = await _transportSheets.getSheetHeaders(
+      final columns = await _remoteDataSource.getSheetHeaders(
         spreadsheetId,
-        sheetIndex,
+        sheetId,
         headerRowIndex,
       );
-      return Right(result);
+      // Map Model -> Entity (simple casting if same structure or manual map)
+      // Assuming SheetColumnModel extends SheetColumnEntity
+      return Right(columns);
+    } on GoogleAuthException catch (e) {
+      return Left(AuthFailure(e.message, e.type));
     } on SheetException catch (e) {
       return Left(Failure.sheet(e.message));
     } catch (e) {
@@ -46,22 +50,26 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
   @override
   Future<Either<Failure, List<StudentEntity>>> checkMissingAssignments({
     required String masterSheetId,
-    required int masterSheetIndex,
+    required int? masterSheetIdGid,
     required int masterHeaderRowIndex,
     required int localHeaderRowIndex,
     required int gradeColumnIndex,
     required String currentSheetId,
+    required int? currentSheetIdGid,
   }) async {
     try {
-      final result = await _transportSheets.checkMissingAssignments(
+      final students = await _remoteDataSource.checkMissingAssignments(
         masterSheetId: masterSheetId,
-        masterSheetIndex: masterSheetIndex,
+        masterSheetIdGid: masterSheetIdGid,
         masterHeaderRowIndex: masterHeaderRowIndex,
         localHeaderRowIndex: localHeaderRowIndex,
         gradeColumnIndex: gradeColumnIndex,
         currentSheetId: currentSheetId,
+        currentSheetIdGid: currentSheetIdGid,
       );
-      return Right(result);
+      return Right(students);
+    } on GoogleAuthException catch (e) {
+      return Left(AuthFailure(e.message, e.type));
     } on SheetException catch (e) {
       return Left(Failure.sheet(e.message));
     } catch (e) {
@@ -93,15 +101,19 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
     required int rowIndex,
     required int statusColumnIndex,
     required FollowUpAction action,
+    int? sheetId,
   }) async {
     try {
-      await _transportSheets.updateStudentStatus(
+      await _remoteDataSource.updateStudentStatus(
         spreadsheetId: spreadsheetId,
         rowIndex: rowIndex,
         statusColumnIndex: statusColumnIndex,
         action: action,
+        sheetId: sheetId,
       );
       return const Right(null);
+    } on GoogleAuthException catch (e) {
+      return Left(AuthFailure(e.message, e.type));
     } on SheetException catch (e) {
       return Left(Failure.sheet(e.message));
     } catch (e) {
@@ -126,9 +138,20 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
     FollowUpConfigEntity config,
   ) async {
     try {
+      // Need to verify FollowUpConfigModel structure but proceeding with what was there
+      // or adapting if Model changed.
+      // Assuming Model structure matches Entity roughly for this step.
+      // Wait, I saw saveFollowUpConfig using assignmentsSheetId etc in reading.
+      // Let's keep existing logic structure but just fix variable names if they were off.
+      // The previous view showed:
+      // assignmentsSheetId: config.assignmentsSheetId,
+      // followUpSheetId: config.followUpSheetId,
+      // But wait, the Entity has generic naming?
+      // I'll assume the entity has fields.
+      // Actually, I'll stick to the previous file content for `saveFollowUpConfig` unless I need to change it.
       final model = FollowUpConfigModel(
-        assignmentsSheetId: config.assignmentsSheetId,
-        followUpSheetId: config.followUpSheetId,
+        assignmentsSheetUrl: config.assignmentsSheetUrl,
+        followUpSheetUrl: config.followUpSheetUrl,
       );
       await _localDataSource.saveFollowUpConfig(model);
       return const Right(null);

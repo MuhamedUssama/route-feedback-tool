@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:mentor_assistant/core/usecases/usecase.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 import '../../../domain/entities/follow_up_config_entity.dart';
 import '../../../domain/usecases/get_follow_up_config_usecase.dart';
 import '../../../domain/usecases/save_follow_up_config_usecase.dart';
@@ -36,14 +37,14 @@ class FollowUpConfigCubit extends Cubit<FollowUpConfigState> {
   }
 
   Future<void> saveConfig({
-    required String assignmentsSheetId,
-    required String followUpSheetId,
+    required String assignmentsSheetUrl,
+    required String followUpSheetUrl,
   }) async {
     emit(const FollowUpConfigState.loading());
 
     final config = FollowUpConfigEntity(
-      assignmentsSheetId: assignmentsSheetId,
-      followUpSheetId: followUpSheetId,
+      assignmentsSheetUrl: assignmentsSheetUrl,
+      followUpSheetUrl: followUpSheetUrl,
     );
 
     final result = await _saveFollowUpConfigUseCase(

@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mentor_assistant/core/utils/google_sheet_url_parser.dart';
 import '../../../domain/entities/sheet_column_entity.dart';
 import '../../../domain/entities/student_entity.dart';
 import '../../../domain/entities/follow_up_config_entity.dart';
@@ -27,25 +28,37 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
   ) : super(const FollowUpActionState.initial());
 
   Future<void> fetchSetupData({
-    required String assignmentSheetId,
+    required String assignmentSheetUrl,
     required int assignmentHeaderRowIndex,
-    required String followUpSheetId,
+    required String followUpSheetUrl,
     required int followUpHeaderRowIndex,
   }) async {
     emit(const FollowUpActionState.loadingHeaders());
 
+    final assignmentInfo = GoogleSheetUrlParser.parse(assignmentSheetUrl);
+    final followUpInfo = GoogleSheetUrlParser.parse(followUpSheetUrl);
+
+    if (assignmentInfo == null) {
+      emit(const FollowUpActionState.error("Invalid Assignment Sheet URL"));
+      return;
+    }
+    if (followUpInfo == null) {
+      emit(const FollowUpActionState.error("Invalid Follow-Up Sheet URL"));
+      return;
+    }
+
     final results = await Future.wait([
       _getSheetHeadersUseCase(
         GetSheetHeadersParams(
-          spreadsheetId: assignmentSheetId,
-          sheetIndex: 0,
+          spreadsheetId: assignmentInfo.spreadsheetId,
+          sheetId: assignmentInfo.gid,
           headerRowIndex: assignmentHeaderRowIndex,
         ),
       ),
       _getSheetHeadersUseCase(
         GetSheetHeadersParams(
-          spreadsheetId: followUpSheetId,
-          sheetIndex: 0,
+          spreadsheetId: followUpInfo.spreadsheetId,
+          sheetId: followUpInfo.gid,
           headerRowIndex: followUpHeaderRowIndex,
         ),
       ),
@@ -82,22 +95,35 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
   }
 
   Future<void> checkAssignments({
-    required String masterSheetId,
-    required int masterSheetIndex,
+    required String masterSheetUrl,
     required int masterHeaderRowIndex,
     required int localHeaderRowIndex,
     required int gradeColumnIndex,
-    required String currentSheetId,
+    required String currentSheetUrl,
   }) async {
     emit(const FollowUpActionState.loadingStudents());
+
+    final masterInfo = GoogleSheetUrlParser.parse(masterSheetUrl);
+    final currentInfo = GoogleSheetUrlParser.parse(currentSheetUrl);
+
+    if (masterInfo == null) {
+      emit(const FollowUpActionState.error("Invalid Master Sheet URL"));
+      return;
+    }
+    if (currentInfo == null) {
+      emit(const FollowUpActionState.error("Invalid Current Sheet URL"));
+      return;
+    }
+
     final result = await _checkMissingAssignmentsUseCase(
       CheckMissingAssignmentsParams(
-        masterSheetId: masterSheetId,
-        masterSheetIndex: masterSheetIndex,
+        masterSheetId: masterInfo.spreadsheetId,
+        masterSheetIdGid: masterInfo.gid,
         masterHeaderRowIndex: masterHeaderRowIndex,
         localHeaderRowIndex: localHeaderRowIndex,
         gradeColumnIndex: gradeColumnIndex,
-        currentSheetId: currentSheetId,
+        currentSheetId: currentInfo.spreadsheetId,
+        currentSheetIdGid: currentInfo.gid,
       ),
     );
 
@@ -110,12 +136,18 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
   Future<void> sendToSelectedStudents({
     required List<StudentEntity> students,
     required String assignmentName,
-    required String spreadsheetId,
+    required String spreadsheetUrl,
     required int statusColumnIndex,
   }) async {
     final failedEmails = <String>[];
     int sentCount = 0;
     final total = students.length;
+
+    final sheetInfo = GoogleSheetUrlParser.parse(spreadsheetUrl);
+    if (sheetInfo == null) {
+      emit(const FollowUpActionState.error("Invalid Spreadsheet URL"));
+      return;
+    }
 
     for (int i = 0; i < total; i++) {
       final student = students[i];
@@ -159,10 +191,11 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
         // or await if we want strict consistency. Let's await to be safe.
         await _updateStudentStatusUseCase(
           UpdateStudentStatusParams(
-            spreadsheetId: spreadsheetId,
+            spreadsheetId: sheetInfo.spreadsheetId,
             rowIndex: student.rowNumber,
             statusColumnIndex: statusColumnIndex,
             action: FollowUpAction.sent,
+            sheetId: sheetInfo.gid,
           ),
         );
       }

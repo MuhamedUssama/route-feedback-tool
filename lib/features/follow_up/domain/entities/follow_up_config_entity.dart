@@ -3,14 +3,14 @@ import 'package:equatable/equatable.dart';
 enum FollowUpAction { markedAsDone, sent }
 
 class FollowUpConfigEntity extends Equatable {
-  final String assignmentsSheetId;
-  final String followUpSheetId;
+  final String assignmentsSheetUrl;
+  final String followUpSheetUrl;
 
   const FollowUpConfigEntity({
-    required this.assignmentsSheetId,
-    required this.followUpSheetId,
+    required this.assignmentsSheetUrl,
+    required this.followUpSheetUrl,
   });
 
   @override
-  List<Object?> get props => [assignmentsSheetId, followUpSheetId];
+  List<Object?> get props => [assignmentsSheetUrl, followUpSheetUrl];
 }

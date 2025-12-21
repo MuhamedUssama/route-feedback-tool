@@ -7,17 +7,18 @@ import '../entities/follow_up_config_entity.dart';
 abstract interface class FollowUpRepository {
   Future<Either<Failure, List<SheetColumnEntity>>> getSheetHeaders(
     String spreadsheetId,
-    int sheetIndex,
+    int? sheetId,
     int headerRowIndex,
   );
 
   Future<Either<Failure, List<StudentEntity>>> checkMissingAssignments({
     required String masterSheetId,
-    required int masterSheetIndex,
+    required int? masterSheetIdGid,
     required int masterHeaderRowIndex,
     required int localHeaderRowIndex,
     required int gradeColumnIndex,
     required String currentSheetId,
+    required int? currentSheetIdGid,
   });
 
   Future<Either<Failure, void>> sendFollowUpEmail({
@@ -34,5 +35,6 @@ abstract interface class FollowUpRepository {
     required int rowIndex,
     required int statusColumnIndex,
     required FollowUpAction action,
+    int? sheetId,
   });
 }

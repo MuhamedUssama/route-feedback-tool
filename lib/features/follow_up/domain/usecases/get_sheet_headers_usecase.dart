@@ -16,10 +16,10 @@ class GetSheetHeadersUseCase
   @override
   Future<Either<Failure, List<SheetColumnEntity>>> call(
     GetSheetHeadersParams params,
-  ) async {
-    return await _repository.getSheetHeaders(
+  ) {
+    return _repository.getSheetHeaders(
       params.spreadsheetId,
-      params.sheetIndex,
+      params.sheetId,
       params.headerRowIndex,
     );
   }
@@ -27,15 +27,15 @@ class GetSheetHeadersUseCase
 
 class GetSheetHeadersParams extends Equatable {
   final String spreadsheetId;
-  final int sheetIndex;
+  final int? sheetId;
   final int headerRowIndex;
 
   const GetSheetHeadersParams({
     required this.spreadsheetId,
-    required this.sheetIndex,
+    required this.sheetId,
     required this.headerRowIndex,
   });
 
   @override
-  List<Object?> get props => [spreadsheetId, sheetIndex, headerRowIndex];
+  List<Object?> get props => [spreadsheetId, sheetId, headerRowIndex];
 }

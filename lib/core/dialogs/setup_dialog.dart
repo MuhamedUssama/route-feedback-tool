@@ -45,7 +45,7 @@ class _SetupDialogState extends State<SetupDialog> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Please enter your Google Sheet IDs to connect the assistant.',
+              'Please enter your Google Sheet URLs (Links) to connect the assistant.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.textTheme.bodySmall?.color,
               ),
@@ -57,9 +57,9 @@ class _SetupDialogState extends State<SetupDialog> {
             TextFormField(
               controller: _assignmentController,
               decoration: const InputDecoration(
-                labelText: 'Assignment Sheet ID',
-                prefixIcon: Icon(Icons.table_chart_outlined),
-                hintText: 'e.g., 1BxiMvs0X...',
+                labelText: 'Assignment Sheet URL',
+                prefixIcon: Icon(Icons.link),
+                hintText: 'e.g., https://docs.google.com/spreadsheets/d/...',
               ),
               validator: (value) =>
                   value == null || value.isEmpty ? 'Required' : null,
@@ -68,9 +68,9 @@ class _SetupDialogState extends State<SetupDialog> {
             TextFormField(
               controller: _followUpController,
               decoration: const InputDecoration(
-                labelText: 'Follow-Up Sheet ID',
-                prefixIcon: Icon(Icons.people_outline),
-                hintText: 'e.g., 1zK...9A',
+                labelText: 'Follow-Up Sheet URL',
+                prefixIcon: Icon(Icons.link),
+                hintText: 'e.g., https://docs.google.com/spreadsheets/d/...',
               ),
               validator: (value) =>
                   value == null || value.isEmpty ? 'Required' : null,

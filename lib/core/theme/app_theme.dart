@@ -163,7 +163,11 @@ abstract class AppTheme {
             const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           ),
           textStyle: WidgetStateProperty.all(
-            GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+            GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              letterSpacing: 1.0,
+            ),
           ),
           minimumSize: WidgetStateProperty.all(const Size(double.infinity, 56)),
         ),

@@ -55,10 +55,10 @@ class _FollowUpViewState extends State<_FollowUpView> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => SetupDialog(
-        onSave: (assignmentId, followUpId) {
+        onSave: (assignmentUrl, followUpUrl) {
           context.read<FollowUpConfigCubit>().saveConfig(
-            assignmentsSheetId: assignmentId,
-            followUpSheetId: followUpId,
+            assignmentsSheetUrl: assignmentUrl,
+            followUpSheetUrl: followUpUrl,
           );
           Navigator.of(ctx).pop();
         },
@@ -85,12 +85,12 @@ class _FollowUpViewState extends State<_FollowUpView> {
 
   Future<void> _sendEmails() async {
     final configState = context.read<FollowUpConfigCubit>().state;
-    final spreadsheetId = configState.maybeWhen(
-      configLoaded: (config) => config.followUpSheetId,
+    final spreadsheetUrl = configState.maybeWhen(
+      configLoaded: (config) => config.followUpSheetUrl,
       orElse: () => null,
     );
 
-    if (spreadsheetId == null || _statusCol == null) {
+    if (spreadsheetUrl == null || _statusCol == null) {
       _showMessenger(
         context,
         MessengerType.error,
@@ -103,7 +103,7 @@ class _FollowUpViewState extends State<_FollowUpView> {
     context.read<FollowUpActionCubit>().sendToSelectedStudents(
       students: _selectedStudents,
       assignmentName: 'Required Assignment', // Could be dynamic later
-      spreadsheetId: spreadsheetId,
+      spreadsheetUrl: spreadsheetUrl,
       statusColumnIndex: _statusCol!,
     );
   }
@@ -123,19 +123,19 @@ class _FollowUpViewState extends State<_FollowUpView> {
 
   void _triggerCheckAssignments() {
     final configState = context.read<FollowUpConfigCubit>().state;
-    final currentAssignmentSheetId = configState.maybeWhen(
-      configLoaded: (config) => config.assignmentsSheetId,
+    final currentAssignmentSheetUrl = configState.maybeWhen(
+      configLoaded: (config) => config.assignmentsSheetUrl,
       orElse: () => null,
     );
 
-    final followUpSheetId = configState.maybeWhen(
-      configLoaded: (config) => config.followUpSheetId,
+    final followUpSheetUrl = configState.maybeWhen(
+      configLoaded: (config) => config.followUpSheetUrl,
       orElse: () => null,
     );
 
     // Validate all inputs
-    if (currentAssignmentSheetId == null ||
-        followUpSheetId == null ||
+    if (currentAssignmentSheetUrl == null ||
+        followUpSheetUrl == null ||
         _assignmentRow == null ||
         _followUpRow == null ||
         _assignmentCol == null || // Grade column in master
@@ -150,12 +150,11 @@ class _FollowUpViewState extends State<_FollowUpView> {
     }
 
     context.read<FollowUpActionCubit>().checkAssignments(
-      masterSheetId: currentAssignmentSheetId,
-      masterSheetIndex: 0, // Defaulting to 0 as per usual
+      masterSheetUrl: currentAssignmentSheetUrl,
       masterHeaderRowIndex: _assignmentRow!,
       localHeaderRowIndex: _followUpRow!,
       gradeColumnIndex: _assignmentCol!,
-      currentSheetId: followUpSheetId,
+      currentSheetUrl: followUpSheetUrl,
     );
   }
 
@@ -213,23 +212,23 @@ class _FollowUpViewState extends State<_FollowUpView> {
 
                   final configState = context.read<FollowUpConfigCubit>().state;
 
-                  // Extract IDs
-                  String? assignId;
-                  String? fUpId;
+                  // Extract URLs
+                  String? assignUrl;
+                  String? fUpUrl;
 
                   configState.maybeWhen(
                     configLoaded: (config) {
-                      assignId = config.assignmentsSheetId;
-                      fUpId = config.followUpSheetId;
+                      assignUrl = config.assignmentsSheetUrl;
+                      fUpUrl = config.followUpSheetUrl;
                     },
                     orElse: () {},
                   );
 
-                  if (assignId != null && fUpId != null) {
+                  if (assignUrl != null && fUpUrl != null) {
                     context.read<FollowUpActionCubit>().fetchSetupData(
-                      assignmentSheetId: assignId!,
+                      assignmentSheetUrl: assignUrl!,
                       assignmentHeaderRowIndex: assignRow,
-                      followUpSheetId: fUpId!,
+                      followUpSheetUrl: fUpUrl!,
                       followUpHeaderRowIndex: fUpRow,
                     );
                   } else {
@@ -260,19 +259,17 @@ class _FollowUpViewState extends State<_FollowUpView> {
                 child: ElevatedButton.icon(
                   onPressed: _triggerCheckAssignments,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                    foregroundColor: Theme.of(context).colorScheme.onSecondary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 48,
                       vertical: 24,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    elevation: 6,
-                    shadowColor: Theme.of(
-                      context,
-                    ).colorScheme.secondary.withValues(alpha: 0.5),
+                    minimumSize: Size(
+                      MediaQuery.of(context).size.width * 0.46,
+                      56,
+                    ),
                   ),
                   icon: const Icon(Icons.search_rounded, size: 28),
                   label: Text(
@@ -324,7 +321,7 @@ class _FollowUpViewState extends State<_FollowUpView> {
                 },
               ),
             ),
-
+            const SizedBox(height: 16),
             // Footer
             FollowUpActionFooter(
               selectedCount: _selectedStudents.length,

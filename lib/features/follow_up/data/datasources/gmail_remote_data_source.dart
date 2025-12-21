@@ -80,6 +80,7 @@ class GmailRemoteDataSourceImpl implements GmailRemoteDataSource {
   String _getEmailBody(String studentName, String assignmentName) {
     return '''
       <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px;">
+        <h1>Test Email</h1>
         <p>Dear <strong>$studentName</strong>,</p>
         <p>I hope this email finds you well.</p>
         <p>We noticed that we haven't received your submission for 

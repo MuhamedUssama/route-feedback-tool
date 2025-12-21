@@ -18,15 +18,22 @@ class StudentDataTable extends StatefulWidget {
 }
 
 class _StudentDataTableState extends State<StudentDataTable> {
-  final Set<int> _selectedIndices =
-      {}; // Use indices for now, or student email/id if unique
+  final Set<int> _selectedIndices = {}; // Use indices for now
+
+  // Add ScrollControllers
+  final _verticalScrollController = ScrollController();
+  final _horizontalScrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _verticalScrollController.dispose();
+    _horizontalScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void didUpdateWidget(covariant StudentDataTable oldWidget) {
     if (widget.students != oldWidget.students) {
-      // Logic to handle external updates if needed, e.g. clearing selection
-      // For now, let's keep selection if indices match, or clear it.
-      // A safer bet for a new list is usually to clear.
       _selectedIndices.clear();
     }
     super.didUpdateWidget(oldWidget);
@@ -110,13 +117,17 @@ class _StudentDataTableState extends State<StudentDataTable> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Scrollbar(
+          controller: _verticalScrollController,
           thumbVisibility: true,
           trackVisibility: true,
           child: SingleChildScrollView(
+            controller: _verticalScrollController,
             scrollDirection: Axis.vertical,
             child: Scrollbar(
+              controller: _horizontalScrollController,
               thumbVisibility: true,
               child: SingleChildScrollView(
+                controller: _horizontalScrollController,
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minWidth: 800),

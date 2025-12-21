@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../presentation/cubits/follow_up_action/follow_up_action_cubit.dart';
 
 class FollowUpActionFooter extends StatelessWidget {
@@ -17,26 +16,10 @@ class FollowUpActionFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        border: Border(
-          top: BorderSide(
-            color:
-                theme.dividerTheme.color ?? Colors.grey.withValues(alpha: 0.2),
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: theme.scaffoldBackgroundColor),
       child: BlocBuilder<FollowUpActionCubit, FollowUpActionState>(
         builder: (context, state) {
           return AnimatedSwitcher(
@@ -81,25 +64,9 @@ class FollowUpActionFooter extends StatelessWidget {
             onPressed: isEnabled ? onSendPressed : null,
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(0, 56), // Override infinite width
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: isEnabled ? 4 : 0,
-              disabledBackgroundColor: theme.disabledColor,
-              disabledForegroundColor: Colors.grey[600],
             ),
             icon: const Icon(Icons.send_rounded, size: 20),
-            label: Text(
-              'SEND FOLLOW-UP EMAILS',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                letterSpacing: 1.0,
-              ),
-            ),
+            label: const Text('SEND FOLLOW-UP EMAILS'),
           ),
         ],
       ),
