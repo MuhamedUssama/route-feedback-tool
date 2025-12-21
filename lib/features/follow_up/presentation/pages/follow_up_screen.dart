@@ -148,7 +148,7 @@ class _FollowUpViewState extends State<_FollowUpView> {
         followUpSheetUrl == null ||
         _assignmentRow == null ||
         _followUpRow == null ||
-        _assignmentCol == null || // Grade column in master
+        _assignmentCol == null ||
         _statusCol == null) {
       _showMessenger(
         context,
@@ -218,57 +218,60 @@ class _FollowUpViewState extends State<_FollowUpView> {
           children: [
             // Header Section
             Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: FollowUpFilterHeader(
-                onLoadColumns:
-                    (assignRow, fUpRow, assignStartCol, fUpStartCol) {
-                      setState(() {
-                        _assignmentRow = assignRow;
-                        _followUpRow = fUpRow;
-                      });
+                  padding: const EdgeInsets.all(24.0),
+                  child: FollowUpFilterHeader(
+                    onLoadColumns:
+                        (assignRow, fUpRow, assignStartCol, fUpStartCol) {
+                          setState(() {
+                            _assignmentRow = assignRow;
+                            _followUpRow = fUpRow;
+                          });
 
-                      final configState = context
-                          .read<FollowUpConfigCubit>()
-                          .state;
+                          final configState = context
+                              .read<FollowUpConfigCubit>()
+                              .state;
 
-                      // Extract URLs
-                      String? assignUrl;
-                      String? fUpUrl;
+                          // Extract URLs
+                          String? assignUrl;
+                          String? fUpUrl;
 
-                      configState.maybeWhen(
-                        configLoaded: (config) {
-                          assignUrl = config.assignmentsSheetUrl;
-                          fUpUrl = config.followUpSheetUrl;
+                          configState.maybeWhen(
+                            configLoaded: (config) {
+                              assignUrl = config.assignmentsSheetUrl;
+                              fUpUrl = config.followUpSheetUrl;
+                            },
+                            orElse: () {},
+                          );
+
+                          if (assignUrl != null && fUpUrl != null) {
+                            context.read<FollowUpActionCubit>().fetchSetupData(
+                              assignmentSheetUrl: assignUrl!,
+                              assignmentHeaderRowIndex: assignRow,
+                              assignmentStartColLetter: assignStartCol,
+                              followUpSheetUrl: fUpUrl!,
+                              followUpHeaderRowIndex: fUpRow,
+                              followUpStartColLetter: fUpStartCol,
+                            );
+                          } else {
+                            _showMessenger(
+                              context,
+                              MessengerType.error,
+                              'Config Error',
+                              'Sheet Configurations not found.',
+                            );
+                          }
                         },
-                        orElse: () {},
-                      );
-
-                      if (assignUrl != null && fUpUrl != null) {
-                        context.read<FollowUpActionCubit>().fetchSetupData(
-                          assignmentSheetUrl: assignUrl!,
-                          assignmentHeaderRowIndex: assignRow,
-                          assignmentStartColLetter: assignStartCol,
-                          followUpSheetUrl: fUpUrl!,
-                          followUpHeaderRowIndex: fUpRow,
-                          followUpStartColLetter: fUpStartCol,
-                        );
-                      } else {
-                        _showMessenger(
-                          context,
-                          MessengerType.error,
-                          'Config Error',
-                          'Sheet Configurations not found.',
-                        );
-                      }
+                    onFiltersChanged: (assignCol, statusCol) {
+                      setState(() {
+                        _assignmentCol = assignCol;
+                        _statusCol = statusCol;
+                      });
                     },
-                onFiltersChanged: (assignCol, statusCol) {
-                  setState(() {
-                    _assignmentCol = assignCol;
-                    _statusCol = statusCol;
-                  });
-                },
-              ),
-            ),
+                  ),
+                )
+                .animate()
+                .fadeIn(duration: 600.ms)
+                .slideY(begin: -0.2, end: 0, curve: Curves.easeOutQuart),
 
             // Action Button (Animated)
             if (_assignmentRow != null &&
@@ -276,33 +279,36 @@ class _FollowUpViewState extends State<_FollowUpView> {
                 _assignmentCol != null &&
                 _statusCol != null)
               Container(
-                margin: const EdgeInsets.symmetric(vertical: 16),
-                child: ElevatedButton.icon(
-                  onPressed: _triggerCheckAssignments,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 48,
-                      vertical: 24,
+                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    child: ElevatedButton.icon(
+                      onPressed: _triggerCheckAssignments,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 48,
+                          vertical: 24,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        minimumSize: Size(
+                          MediaQuery.of(context).size.width * 0.46,
+                          56,
+                        ),
+                      ),
+                      icon: const Icon(Icons.search_rounded, size: 28),
+                      label: Text(
+                        'CHECK FOR MISSING ASSIGNMENTS',
+                        style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    minimumSize: Size(
-                      MediaQuery.of(context).size.width * 0.46,
-                      56,
-                    ),
-                  ),
-                  icon: const Icon(Icons.search_rounded, size: 28),
-                  label: Text(
-                    'CHECK FOR MISSING ASSIGNMENTS',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-              ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+                  )
+                  .animate()
+                  .fadeIn(delay: 200.ms, duration: 400.ms)
+                  .scale(duration: 400.ms, curve: Curves.easeOutBack),
 
             // Data Table / Loading
             Expanded(
@@ -326,14 +332,6 @@ class _FollowUpViewState extends State<_FollowUpView> {
                       ),
                     ),
                     studentsLoaded: (missing, submitted) {
-                      // Schedule store update if needed (avoiding setstate during build)
-                      // Ideally we should use a Listener for side effects like updating local variables
-                      // But for now, we can just use the provided list for the table.
-
-                      // NOTE: Storing submitted in variable here is unsafe during build.
-                      // Moving side effect to BlocListener or just using state data.
-                      // Since we use _submittedStudents in dialog, we need to capture it.
-                      // Best practice: Use BlocListener for side effects.
                       return StudentDataTable(
                         students: missing,
                         onSelectionChanged: (selected) {
@@ -343,22 +341,22 @@ class _FollowUpViewState extends State<_FollowUpView> {
                         },
                       );
                     },
-                    // If sending, we could ideally keep the list visible.
-                    // For now, we return empty or could potentially store state differently.
-                    // Given strict requirements, shrinking is safe to avoid state loss crashes
-                    // if we don't have the students list in this state.
+
                     orElse: () => const SizedBox.shrink(),
                   );
                 },
-              ),
+              ).animate().fadeIn(delay: 300.ms, duration: 600.ms),
             ),
             const SizedBox(height: 16),
             // Footer
             FollowUpActionFooter(
-              selectedCount: _selectedStudents.length,
-              submittedCount: _submittedStudents.length,
-              onSendPressed: () => _showConfirmationDialog(context),
-            ),
+                  selectedCount: _selectedStudents.length,
+                  submittedCount: _submittedStudents.length,
+                  onSendPressed: () => _showConfirmationDialog(context),
+                )
+                .animate()
+                .fadeIn(delay: 500.ms, duration: 600.ms)
+                .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuart),
           ],
         ),
       ),
