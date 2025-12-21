@@ -74,6 +74,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i816.SharedPrefsService>(
       () => _i816.SharedPrefsService(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i962.GmailRemoteDataSource>(
+      () => _i962.GmailRemoteDataSourceImpl(
+        gh<_i527.GoogleAuthClient>(),
+        gh<_i816.SharedPrefsService>(),
+      ),
+    );
     gh.lazySingleton<_i1015.FollowUpLocalDataSource>(
       () => _i1015.FollowUpLocalDataSourceImpl(gh<_i816.SharedPrefsService>()),
     );
@@ -83,11 +89,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i850.SheetsRemoteDataSource>(
       () => _i850.SheetsRemoteDataSourceImpl(gh<_i527.GoogleAuthClient>()),
     );
+    gh.lazySingleton<_i934.FollowUpRepository>(
+      () => _i826.FollowUpRepositoryImpl(
+        gh<_i850.SheetsRemoteDataSource>(),
+        gh<_i962.GmailRemoteDataSource>(),
+        gh<_i1015.FollowUpLocalDataSource>(),
+      ),
+    );
     gh.lazySingleton<_i107.AuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSourceImpl(gh<_i527.GoogleAuthClient>()),
-    );
-    gh.lazySingleton<_i962.GmailRemoteDataSource>(
-      () => _i962.GmailRemoteDataSourceImpl(gh<_i527.GoogleAuthClient>()),
     );
     gh.lazySingleton<_i787.AuthRepository>(
       () => _i153.AuthRepositoryImpl(
@@ -103,16 +113,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i48.LogoutUseCase>(
       () => _i48.LogoutUseCase(gh<_i787.AuthRepository>()),
-    );
-    gh.lazySingleton<_i934.FollowUpRepository>(
-      () => _i826.FollowUpRepositoryImpl(
-        gh<_i850.SheetsRemoteDataSource>(),
-        gh<_i962.GmailRemoteDataSource>(),
-        gh<_i1015.FollowUpLocalDataSource>(),
-      ),
-    );
-    gh.factory<_i117.AuthCubit>(
-      () => _i117.AuthCubit(gh<_i57.LoginWithGoogleUseCase>()),
     );
     gh.lazySingleton<_i306.CheckMissingAssignmentsUseCase>(
       () =>
@@ -146,6 +146,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i847.SendFollowUpEmailUseCase>(),
         gh<_i880.UpdateStudentStatusUseCase>(),
       ),
+    );
+    gh.factory<_i117.AuthCubit>(
+      () => _i117.AuthCubit(gh<_i57.LoginWithGoogleUseCase>()),
     );
     return this;
   }

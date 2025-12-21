@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:injectable/injectable.dart';
+import 'package:mentor_assistant/features/auth/data/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 @lazySingleton
@@ -40,5 +43,13 @@ class SharedPrefsService {
 
   Future<void> clearData() async {
     await _prefs.remove(_kSheetIdKey);
+  }
+
+  Future<UserModel?> getUser() async {
+    final String? userJson = _prefs.getString('CACHED_USER');
+    if (userJson != null) {
+      return UserModel.fromJson(jsonDecode(userJson));
+    }
+    return null;
   }
 }

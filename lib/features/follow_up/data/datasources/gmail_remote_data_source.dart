@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:injectable/injectable.dart';
 import 'package:googleapis/gmail/v1.dart';
 import 'package:mentor_assistant/core/errors/auth_error_type.dart';
+import 'package:mentor_assistant/core/services/shared_prefs_service.dart';
+import 'package:mentor_assistant/features/auth/data/models/user_model.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/google_auth_client.dart';
 import '../../domain/entities/student_entity.dart';
@@ -16,8 +18,8 @@ abstract interface class GmailRemoteDataSource {
 @LazySingleton(as: GmailRemoteDataSource)
 class GmailRemoteDataSourceImpl implements GmailRemoteDataSource {
   final GoogleAuthClient _googleAuthClient;
-
-  GmailRemoteDataSourceImpl(this._googleAuthClient);
+  final SharedPrefsService _sharedPrefsService;
+  GmailRemoteDataSourceImpl(this._googleAuthClient, this._sharedPrefsService);
 
   @override
   Future<void> sendFollowUpEmail({
@@ -38,8 +40,13 @@ class GmailRemoteDataSourceImpl implements GmailRemoteDataSource {
       }
 
       final GmailApi gmailApi = GmailApi(client);
-
-      final String htmlBody = _getEmailBody(student.name, assignmentName);
+      final UserModel? user = await _sharedPrefsService.getUser();
+      final String mentorName = user?.displayName ?? 'Mentor';
+      final String htmlBody = _getEmailBody(
+        student.name,
+        assignmentName,
+        mentorName,
+      );
 
       final Message message = Message()
         ..raw = _createEmail(
@@ -77,7 +84,11 @@ class GmailRemoteDataSourceImpl implements GmailRemoteDataSource {
     return base64Url.encode(utf8.encode(emailString));
   }
 
-  String _getEmailBody(String studentName, String assignmentName) {
+  String _getEmailBody(
+    String studentName,
+    String assignmentName,
+    String mentorName,
+  ) {
     return '''
       <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px;">
         <h1>Test Email</h1>
@@ -92,7 +103,7 @@ class GmailRemoteDataSourceImpl implements GmailRemoteDataSource {
           <strong>Important:</strong> Staying on track is crucial. Please submit ASAP.
         </div>
         <p>Best Regards,</p>
-        <p><strong>Mentor Assistant</strong></p>
+        <p><strong>Eng. $mentorName</strong></p>
       </div>
     ''';
   }
