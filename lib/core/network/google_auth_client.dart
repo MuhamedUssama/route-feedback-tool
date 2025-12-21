@@ -68,12 +68,25 @@ class GoogleAuthClient {
   }
 
   Future<void> signOut() async {
-    if (Platform.isMacOS) {
-      try {
+    try {
+      // 1. MacOS Native Sign Out
+      if (Platform.isMacOS) {
         await GoogleSignIn.instance.signOut();
-      } catch (e) {
-        if (kDebugMode) print("SignOut Error: $e");
+        if (kDebugMode) print("MacOS User Signed Out");
       }
+
+      // 2. Windows & General Cleanup
+      if (_cachedClient != null) {
+        _cachedClient!.close();
+      }
+    } catch (e) {
+      if (kDebugMode) print("SignOut Error: $e");
+    } finally {
+      // 3. Global Reset
+      _cachedClient = null;
+      _loginCompleter = null;
+
+      if (kDebugMode) print("Local Session Cleared");
     }
   }
 

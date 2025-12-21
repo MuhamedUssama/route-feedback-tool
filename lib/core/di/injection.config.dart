@@ -55,6 +55,16 @@ import '../../features/follow_up/presentation/cubits/follow_up_action/follow_up_
 import '../../features/follow_up/presentation/cubits/follow_up_config/follow_up_config_cubit.dart'
     as _i333;
 import '../../features/main_layout/cubit/navigation_cubit.dart' as _i406;
+import '../../features/settings/data/repositories/settings_repository_impl.dart'
+    as _i955;
+import '../../features/settings/domain/repositories/settings_repository.dart'
+    as _i674;
+import '../../features/settings/domain/usecases/test_sheet_connection_usecase.dart'
+    as _i439;
+import '../../features/settings/presentation/cubits/settings/settings_cubit.dart'
+    as _i536;
+import '../../features/settings/presentation/cubits/theme/theme_cubit.dart'
+    as _i34;
 import '../network/google_auth_client.dart' as _i527;
 import '../services/shared_prefs_service.dart' as _i816;
 import 'register_module.dart' as _i291;
@@ -85,6 +95,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1015.FollowUpLocalDataSource>(
       () => _i1015.FollowUpLocalDataSourceImpl(gh<_i816.SharedPrefsService>()),
     );
+    gh.lazySingleton<_i674.SettingsRepository>(
+      () => _i955.SettingsRepositoryImpl(gh<_i816.SharedPrefsService>()),
+    );
     gh.lazySingleton<_i852.AuthLocalDataSource>(
       () => _i852.AuthLocalDataSourceImpl(gh<_i460.SharedPreferences>()),
     );
@@ -100,6 +113,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i107.AuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSourceImpl(gh<_i527.GoogleAuthClient>()),
+    );
+    gh.singleton<_i34.ThemeCubit>(
+      () => _i34.ThemeCubit(gh<_i674.SettingsRepository>()),
     );
     gh.lazySingleton<_i787.AuthRepository>(
       () => _i153.AuthRepositoryImpl(
@@ -140,10 +156,20 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i880.UpdateStudentStatusUseCase>(
       () => _i880.UpdateStudentStatusUseCase(gh<_i934.FollowUpRepository>()),
     );
+    gh.lazySingleton<_i439.TestSheetConnectionUseCase>(
+      () => _i439.TestSheetConnectionUseCase(gh<_i934.FollowUpRepository>()),
+    );
     gh.factory<_i333.FollowUpConfigCubit>(
       () => _i333.FollowUpConfigCubit(
         gh<_i68.GetFollowUpConfigUseCase>(),
         gh<_i265.SaveFollowUpConfigUseCase>(),
+      ),
+    );
+    gh.factory<_i536.SettingsCubit>(
+      () => _i536.SettingsCubit(
+        gh<_i787.AuthRepository>(),
+        gh<_i934.FollowUpRepository>(),
+        gh<_i439.TestSheetConnectionUseCase>(),
       ),
     );
     gh.factory<_i320.FollowUpActionCubit>(

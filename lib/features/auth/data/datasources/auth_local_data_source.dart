@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:injectable/injectable.dart';
+import 'package:mentor_assistant/core/constants/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../models/user_model.dart';
@@ -15,7 +16,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   final SharedPreferences _prefs;
   const AuthLocalDataSourceImpl(this._prefs);
 
-  static const String _kCachedUserKey = 'CACHED_USER';
+  static const String _kCachedUserKey = AppConstants.kCachedUserKey;
 
   @override
   Future<void> cacheUser(UserModel user) async {

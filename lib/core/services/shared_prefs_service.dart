@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:injectable/injectable.dart';
 import 'package:mentor_assistant/features/auth/data/models/user_model.dart';
+import 'package:mentor_assistant/core/constants/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 @lazySingleton
@@ -46,7 +47,7 @@ class SharedPrefsService {
   }
 
   Future<UserModel?> getUser() async {
-    final String? userJson = _prefs.getString('CACHED_USER');
+    final String? userJson = _prefs.getString(AppConstants.kCachedUserKey);
     if (userJson != null) {
       return UserModel.fromJson(jsonDecode(userJson));
     }
