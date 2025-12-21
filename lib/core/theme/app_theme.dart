@@ -6,8 +6,11 @@ abstract class AppTheme {
   static const Color _primary = Color(0xFF006D77); // Deep Teal
   static const Color _secondary = Color(0xFF83C5BE); // Lighter Teal
   static const Color _surfaceLight = Color(0xFFF8FAFC); // Off-white
-  static const Color _surfaceDark = Color(0xFF1E1E1E); // Dark Slate
-  static const Color _cardDark = Color(0xFF252525);
+  static const Color _surfaceDark = Color(0xFF1b1d1e); // Dark Slate
+  // static const Color _cardDark = Color(0xFF242626);
+  static const Color _cardDark = Color(0xFF1b1d1e);
+
+  static const Color _scaffoldDark = Color(0xFF121212);
 
   // Semantic Colors
   static const Color _success = Color(0xFF10B981);
@@ -25,7 +28,7 @@ abstract class AppTheme {
 
   static ThemeData _buildTheme(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
-    final baseColor = isDark ? _surfaceDark : _surfaceLight;
+    final baseColor = isDark ? _scaffoldDark : _surfaceLight;
     final primaryText = isDark ? _textPrimaryDark : _textPrimaryLight;
     final secondaryText = isDark ? _textSecondaryDark : _textSecondaryLight;
 
@@ -33,6 +36,7 @@ abstract class AppTheme {
       useMaterial3: true,
       brightness: brightness,
       scaffoldBackgroundColor: baseColor,
+      disabledColor: isDark ? Color(0XFF6d6d6d) : _textSecondaryLight,
       colorScheme: ColorScheme.fromSeed(
         seedColor: _primary,
         brightness: brightness,
@@ -43,10 +47,9 @@ abstract class AppTheme {
         tertiary: _success,
         tertiaryContainer: _warning,
       ),
-
       // AppBar
       appBarTheme: AppBarTheme(
-        backgroundColor: isDark ? _surfaceDark : _surfaceLight,
+        backgroundColor: baseColor,
         foregroundColor: primaryText,
         centerTitle: false,
         elevation: 0,
@@ -54,7 +57,7 @@ abstract class AppTheme {
         shadowColor: Colors.black.withValues(alpha: 0.1),
         iconTheme: IconThemeData(color: primaryText),
         actionsIconTheme: IconThemeData(color: primaryText),
-        titleTextStyle: GoogleFonts.poppins(
+        titleTextStyle: GoogleFonts.outfit(
           color: primaryText,
           fontWeight: FontWeight.w600,
           fontSize: 24,
@@ -136,7 +139,7 @@ abstract class AppTheme {
         style: ButtonStyle(
           backgroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) {
-              return isDark ? Colors.grey[800] : Colors.grey[300];
+              return isDark ? _surfaceDark : Colors.grey[300];
             }
             return _primary;
           }),
@@ -272,7 +275,7 @@ abstract class AppTheme {
         width: 400,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // Platform Density
