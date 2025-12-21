@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:ui' as color;
 
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:mentor_assistant/core/errors/auth_error_type.dart';
@@ -79,14 +79,11 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       final sheetsApi = await _getSheetsApi();
       final sheetName = await _getSheetTitle(sheetsApi, spreadsheetId, sheetId);
 
-      // Fetch ONLY the header row (using logic 1-based index)
-      // Input Logic: User writes "1" -> code passes "1". API expects "1".
-      // So no offset needed if user input is treated as 1-based natural number.
       final apiRow = headerRowIndex;
 
       final response = await sheetsApi.spreadsheets.values.get(
         spreadsheetId,
-        '$sheetName!$apiRow:$apiRow', // Fetches single row e.g., "Sheet1!1:1"
+        '$sheetName!$apiRow:$apiRow',
       );
 
       final values = response.values;
@@ -144,11 +141,9 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       int? nameIndex;
       int? emailIndex;
 
-      print('--- Header Detection ---');
       for (int i = 0; i < headerRow.length; i++) {
         final header = headerRow[i];
         headersMap[header] = i;
-        print('Header [$i]: "$header"');
 
         if (nameIndex == null &&
             (header == 'name' || header.contains('name'))) {
@@ -165,32 +160,13 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       }
 
       // Fallback Logic
-      if (nameIndex == null) {
-        print('WARNING: "Name" column not found. Defaulting to Index 1.');
-        nameIndex = 1;
-      }
-      if (emailIndex == null) {
-        print('WARNING: "Email" column not found. Defaulting to Index 0.');
-        emailIndex = 0;
-      }
-
-      print('Selected NAME Index: $nameIndex');
-      print('Selected EMAIL Index: $emailIndex');
-
-      // Re-map using found indices to ensure the factory works if it relies on maps
-      // Or better, just pass indices if the model supports it.
-      // Current Model expects a map. Let's fix the map to be standard.
-      // But wait, the key is the string. The factory uses keys like 'Name' or 'Email'.
-      // Update map to force canonical keys for the specific internal factory logic if needed.
-      // Actually, relying on index is safer. Let's look at FromRow logic?
-      // No, we are creating the entity manually here based on the user request to be robust.
+      nameIndex ??= 1;
+      emailIndex ??= 0;
 
       if (!headersMap.containsKey('email') &&
           !headersMap.containsKey('email address') &&
           !headersMap.containsKey('gmail') &&
-          emailIndex == 0) {
-        // Just a warning in log, proceed with fallback
-      }
+          emailIndex == 0) {}
 
       final assignmentName = masterRows[0].length > gradeColumnIndex
           ? masterRows[0][gradeColumnIndex].toString()
@@ -229,17 +205,6 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
         }
       }
 
-      log('--------------------------------------------------');
-      log('🔍 DEBUG LOCAL SHEET HEADERS:');
-      log('All Headers Found: $localHeaders');
-      if (localEmailIndex != -1) {
-        log('✅ SUCCESS: Selected Email Column Index: $localEmailIndex');
-        log('✅ Selected Column Name: "${localHeaders[localEmailIndex]}"');
-      } else {
-        log('❌ ERROR: Could not find any email column in keywords!');
-      }
-      log('--------------------------------------------------');
-
       if (localEmailIndex == -1) {
         throw const SheetException(
           'Could not find "Email" or "Gmail" column in Local Sheet',
@@ -262,21 +227,9 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
               .toSet() ??
           {};
 
-      log('--------------------------------------------------');
-      log('🔍 DEBUG LOCAL EMAILS CONTENT:');
-      log('Count of emails found: ${localEmails.length}');
-      log(
-        'List of emails (First 20): ${localEmails.take(20).toList()}',
-      ); // بنعرض اول 20 بس عشان الزحمة
-      log(
-        'Is "test@email.com" in list? ${localEmails.contains("test@email.com")}',
-      ); // جرب ايميل انت عارف انه موجود
-      log('--------------------------------------------------');
-
       final missingStudents = <StudentModel>[];
 
       // 4. Iterate Rows (Start from index 1 to skip header)
-      print('--- Row Iteration ---');
       for (int i = 1; i < masterRows.length; i++) {
         final row = masterRows[i];
 
@@ -291,18 +244,8 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
 
         bool isMissing = cellValue.isEmpty;
 
-        // Debug Log
-        // ignore: avoid_print
-        print(
-          'Checking Row ${apiStartRow + i}, Cell Value: "$cellValue" (Missing: $isMissing)',
-        );
-
         if (isMissing) {
           try {
-            print(
-              'Found Missing at Row ${apiStartRow + i}. Trying to parse student...',
-            );
-
             // Robust Extraction
             String nameRaw = row.length > nameIndex
                 ? row[nameIndex].toString()
@@ -310,9 +253,6 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
             String emailRaw = row.length > emailIndex
                 ? row[emailIndex].toString()
                 : '';
-
-            print(' - Reading Name from Col $nameIndex: "$nameRaw"');
-            print(' - Reading Email from Col $emailIndex: "$emailRaw"');
 
             // Safety Checks: Trim and Validate
             final name = nameRaw.trim();
@@ -333,15 +273,12 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
                   isSelected: true,
                 );
                 missingStudents.add(student);
-                print(' + Student Added Successfully');
-              } else {
-                print(' x Student Skipped: Email not found in Local Sheet');
               }
-            } else {
-              print(' x Student Skipped: Name/Email missing or invalid');
             }
           } catch (e) {
-            print('Checking Error Exception: $e');
+            if (kDebugMode) {
+              print('Checking Error Exception: $e');
+            }
           }
         }
       }
@@ -369,7 +306,6 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
         sheetId,
       ); // Assuming first sheet
 
-      // Determine Status Text & Color
       String statusText;
       color.Color statusColor;
 
@@ -450,7 +386,6 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
     );
   }
 
-  // Renamed from _getSheetName to _getSheetTitle for clarity
   Future<String> _getSheetTitle(
     SheetsApi api,
     String spreadsheetId,

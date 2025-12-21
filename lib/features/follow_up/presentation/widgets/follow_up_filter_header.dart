@@ -198,7 +198,7 @@ class _FollowUpFilterHeaderState extends State<FollowUpFilterHeader> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<SheetColumnEntity>(
-                            value: _selectedAssignmentColumn,
+                            initialValue: _selectedAssignmentColumn,
                             decoration: const InputDecoration(
                               labelText: 'Select Assignment Column',
                               prefixIcon: Icon(Icons.assignment_outlined),
@@ -223,7 +223,7 @@ class _FollowUpFilterHeaderState extends State<FollowUpFilterHeader> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: DropdownButtonFormField<SheetColumnEntity>(
-                            value: _selectedStatusColumn,
+                            initialValue: _selectedStatusColumn,
                             decoration: const InputDecoration(
                               labelText: 'Select Status Column',
                               prefixIcon: Icon(Icons.check_circle_outline),
