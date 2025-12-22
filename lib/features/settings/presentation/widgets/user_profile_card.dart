@@ -126,6 +126,20 @@ class UserProfileCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/settings/cycle_config');
+                      },
+                      icon: const Icon(
+                        Icons.settings_applications_outlined,
+                        color: Colors.white,
+                      ),
+                      tooltip: 'Manage Cycle Config',
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                        padding: const EdgeInsets.all(12),
+                      ),
+                    ),
                   ],
                 ),
               ),

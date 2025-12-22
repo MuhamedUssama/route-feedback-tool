@@ -55,12 +55,20 @@ import '../../features/follow_up/presentation/cubits/follow_up_action/follow_up_
 import '../../features/follow_up/presentation/cubits/follow_up_config/follow_up_config_cubit.dart'
     as _i333;
 import '../../features/main_layout/cubit/navigation_cubit.dart' as _i406;
+import '../../features/settings/data/datasources/cycle_local_data_source.dart'
+    as _i1024;
+import '../../features/settings/data/repositories/cycle_repository_impl.dart'
+    as _i1034;
 import '../../features/settings/data/repositories/settings_repository_impl.dart'
     as _i955;
+import '../../features/settings/domain/repositories/cycle_repository.dart'
+    as _i797;
 import '../../features/settings/domain/repositories/settings_repository.dart'
     as _i674;
 import '../../features/settings/domain/usecases/test_sheet_connection_usecase.dart'
     as _i439;
+import '../../features/settings/presentation/cubits/cycle_config/cycle_config_cubit.dart'
+    as _i981;
 import '../../features/settings/presentation/cubits/settings/settings_cubit.dart'
     as _i536;
 import '../../features/settings/presentation/cubits/theme/theme_cubit.dart'
@@ -98,6 +106,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i674.SettingsRepository>(
       () => _i955.SettingsRepositoryImpl(gh<_i816.SharedPrefsService>()),
     );
+    gh.lazySingleton<_i1024.CycleLocalDataSource>(
+      () => _i1024.CycleLocalDataSourceImpl(),
+    );
     gh.lazySingleton<_i852.AuthLocalDataSource>(
       () => _i852.AuthLocalDataSourceImpl(gh<_i460.SharedPreferences>()),
     );
@@ -131,6 +142,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i48.LogoutUseCase>(
       () => _i48.LogoutUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.lazySingleton<_i797.CycleRepository>(
+      () => _i1034.CycleRepositoryImpl(gh<_i1024.CycleLocalDataSource>()),
     );
     gh.lazySingleton<_i309.AnalyzeAssignmentStatusUseCase>(
       () =>
@@ -171,6 +185,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i934.FollowUpRepository>(),
         gh<_i439.TestSheetConnectionUseCase>(),
       ),
+    );
+    gh.factory<_i981.CycleConfigCubit>(
+      () => _i981.CycleConfigCubit(gh<_i797.CycleRepository>()),
     );
     gh.factory<_i320.FollowUpActionCubit>(
       () => _i320.FollowUpActionCubit(
