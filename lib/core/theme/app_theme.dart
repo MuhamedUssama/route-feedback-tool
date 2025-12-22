@@ -102,6 +102,14 @@ abstract class AppTheme {
           color: primaryText,
           fontWeight: FontWeight.w600,
         ),
+        labelMedium: GoogleFonts.inter(
+          color: primaryText,
+          fontWeight: FontWeight.w600,
+        ),
+        labelSmall: GoogleFonts.inter(
+          color: primaryText,
+          fontWeight: FontWeight.w600,
+        ),
       ),
 
       // Inputs
@@ -110,15 +118,11 @@ abstract class AppTheme {
         fillColor: isDark ? _cardDark : Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
-          ),
+          borderSide: BorderSide(color: Colors.grey[700]!),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
-          ),
+          borderSide: BorderSide(color: Colors.grey[700]!),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -127,6 +131,14 @@ abstract class AppTheme {
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: _error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _error, width: 2),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[700]!),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -160,7 +172,7 @@ abstract class AppTheme {
           }),
           elevation: WidgetStateProperty.all(2),
           shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           padding: WidgetStateProperty.all(
             const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -176,6 +188,41 @@ abstract class AppTheme {
         ),
       ),
 
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return isDark ? Colors.grey[600] : Colors.grey[500];
+            }
+            return _primary;
+          }),
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.hovered)) {
+              return _primary.withValues(alpha: 0.1);
+            }
+            if (states.contains(WidgetState.pressed)) {
+              return _primary.withValues(alpha: 0.2);
+            }
+            return null;
+          }),
+          elevation: WidgetStateProperty.all(2),
+          side: WidgetStateProperty.all(BorderSide(color: _primary, width: 1)),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          padding: WidgetStateProperty.all(
+            const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          ),
+          textStyle: WidgetStateProperty.all(
+            GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              letterSpacing: 1.0,
+            ),
+          ),
+          minimumSize: WidgetStateProperty.all(const Size(double.infinity, 56)),
+        ),
+      ),
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
           foregroundColor: WidgetStateProperty.resolveWith((states) {
@@ -256,6 +303,23 @@ abstract class AppTheme {
           fontWeight: FontWeight.w500,
           fontSize: 12,
           letterSpacing: 0.5,
+        ),
+      ),
+
+      expansionTileTheme: ExpansionTileThemeData(
+        backgroundColor: isDark
+            ? _cardDark
+            : Colors.grey[300]?.withValues(alpha: 0.7),
+        collapsedBackgroundColor: isDark
+            ? _cardDark
+            : Colors.grey[300]?.withValues(alpha: 0.7),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        collapsedShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        expansionAnimationStyle: AnimationStyle(
+          curve: Curves.easeInOut,
+          duration: const Duration(milliseconds: 200),
         ),
       ),
 
