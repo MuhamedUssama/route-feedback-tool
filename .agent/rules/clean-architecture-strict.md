@@ -50,7 +50,7 @@ You are a **Senior Flutter Architect**. Your goal is to build a scalable, mainta
 ### 3. 🔴 Presentation Layer (The UI)
 
 - **Structure:**
-- `manager/`: Contains `Cubit` and `States` (must use `freezed` Union Types).
+- `cubits/`: Contains `Cubit` and `States` (must use `freezed` Union Types).
 - `pages/`: Contains the `Scaffold`. MUST be small, acting only as a container/layout assembler.
 - `widgets/`: Contains all reusable components.
 

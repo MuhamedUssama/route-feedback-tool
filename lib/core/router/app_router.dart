@@ -6,6 +6,7 @@ import 'package:mentor_assistant/features/auth/presentation/cubit/auth_cubit.dar
 import 'package:mentor_assistant/features/auth/presentation/pages/login_page.dart';
 import 'package:mentor_assistant/features/main_layout/cubit/navigation_cubit.dart';
 import 'package:mentor_assistant/features/main_layout/pages/main_layout_screen.dart';
+import 'package:mentor_assistant/features/settings/presentation/pages/cycle_config_page.dart';
 import 'package:mentor_assistant/features/settings/presentation/pages/settings_screen.dart';
 
 class AppRouter {
@@ -13,6 +14,7 @@ class AppRouter {
   static const String loginRoute = '/login';
   static const String mainLayoutRoute = '/main_layout';
   static const String settingsRoute = '/settings';
+  static const String cycleConfigRoute = '/settings/cycle_config';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -31,7 +33,9 @@ class AppRouter {
           ),
         );
       case settingsRoute:
-        return MaterialPageRoute(builder: (context) => const SettingsScreen());
+        return MaterialPageRoute(builder: (_) => const SettingsScreen());
+      case cycleConfigRoute:
+        return MaterialPageRoute(builder: (_) => const CycleConfigPage());
       default:
         return MaterialPageRoute(builder: (context) => const TestThemePage());
     }
