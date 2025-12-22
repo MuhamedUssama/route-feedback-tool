@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:mentor_assistant/core/constants/app_constants.dart';
 
-// ignore: must_be_immutable
 class ConfigGeneralInfoCard extends StatefulWidget {
   final TextEditingController cycleNumberController;
-  String? selectedTrack;
+  final String? selectedTrack;
+  final ValueChanged<String?> onTrackChanged;
 
-  ConfigGeneralInfoCard({
+  const ConfigGeneralInfoCard({
     super.key,
     required this.cycleNumberController,
     required this.selectedTrack,
+    required this.onTrackChanged,
   });
 
   @override
@@ -54,9 +55,7 @@ class _ConfigGeneralInfoCardState extends State<ConfigGeneralInfoCard> {
                           ),
                         )
                         .toList(),
-                    onChanged: (track) {
-                      setState(() => widget.selectedTrack = track);
-                    },
+                    onChanged: widget.onTrackChanged,
                     validator: (value) =>
                         value == null ? 'Select a track' : null,
                   ),

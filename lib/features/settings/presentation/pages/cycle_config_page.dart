@@ -134,6 +134,11 @@ class _CycleConfigViewState extends State<_CycleConfigView> {
                     ConfigGeneralInfoCard(
                       cycleNumberController: _cycleNumberController,
                       selectedTrack: _selectedTrack,
+                      onTrackChanged: (val) {
+                        setState(() {
+                          _selectedTrack = val;
+                        });
+                      },
                     ),
 
                     const SizedBox(height: 32),

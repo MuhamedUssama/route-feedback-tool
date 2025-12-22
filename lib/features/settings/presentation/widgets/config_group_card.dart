@@ -57,8 +57,9 @@ class _ConfigGroupCardState extends State<ConfigGroupCard> {
                         labelText: 'Group Name',
                         hintText: 'e.g. Friday 10-4 Am',
                       ),
-                      validator: (value) =>
-                          value == null || value.isEmpty ? 'Required' : null,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Group name is required'
+                          : null,
                       onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: 16),
@@ -136,7 +137,7 @@ class _ConfigGroupCardState extends State<ConfigGroupCard> {
                                       keyboardType: TextInputType.number,
                                       validator: (value) =>
                                           value == null || value.isEmpty
-                                          ? 'Required'
+                                          ? '*required'
                                           : null,
                                     ),
                                   ),
@@ -151,7 +152,7 @@ class _ConfigGroupCardState extends State<ConfigGroupCard> {
                                       keyboardType: TextInputType.number,
                                       validator: (value) =>
                                           value == null || value.isEmpty
-                                          ? 'Required'
+                                          ? '*required'
                                           : null,
                                     ),
                                   ),
@@ -184,7 +185,7 @@ class _ConfigGroupCardState extends State<ConfigGroupCard> {
                                       keyboardType: TextInputType.number,
                                       validator: (value) =>
                                           value == null || value.isEmpty
-                                          ? 'Required'
+                                          ? '*required'
                                           : null,
                                     ),
                                   ),
@@ -200,7 +201,7 @@ class _ConfigGroupCardState extends State<ConfigGroupCard> {
                                       keyboardType: TextInputType.number,
                                       validator: (value) =>
                                           value == null || value.isEmpty
-                                          ? 'Required'
+                                          ? '*required'
                                           : null,
                                     ),
                                   ),
