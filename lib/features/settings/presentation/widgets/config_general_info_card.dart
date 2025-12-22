@@ -21,40 +21,57 @@ class _ConfigGeneralInfoCardState extends State<ConfigGeneralInfoCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: widget.cycleNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'Cycle Number',
-                  border: OutlineInputBorder(),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: widget.cycleNumberController,
+                    decoration: const InputDecoration(
+                      labelText: 'Cycle Number',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Cycle number is required'
+                        : null,
+                  ),
                 ),
-                keyboardType: TextInputType.number,
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Required' : null,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: DropdownButtonFormField<String>(
-                initialValue: widget.selectedTrack,
-                decoration: const InputDecoration(
-                  labelText: 'Track',
-                  border: OutlineInputBorder(),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: widget.selectedTrack,
+                    decoration: const InputDecoration(
+                      labelText: 'Track',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: AppConstants.kTracks
+                        .map(
+                          (track) => DropdownMenuItem(
+                            value: track,
+                            child: Text(track),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (track) {
+                      setState(() => widget.selectedTrack = track);
+                    },
+                    validator: (value) =>
+                        value == null ? 'Select a track' : null,
+                  ),
                 ),
-                items: AppConstants.kTracks
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (val) => setState(() => widget.selectedTrack = val),
-                validator: (value) => value == null ? 'Required' : null,
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn().slideX();
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 600.ms, curve: Curves.easeOutQuad)
+        .slideY(
+          begin: 0.1,
+          end: 0,
+          duration: 600.ms,
+          curve: Curves.easeOutQuad,
+        );
   }
 }

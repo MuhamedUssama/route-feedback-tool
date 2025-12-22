@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mentor_assistant/core/widgets/custom_appbar.dart';
@@ -150,18 +151,36 @@ class _CycleConfigViewState extends State<_CycleConfigView> {
                     ),
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
-                      onPressed: _addGroup,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Group'),
-                    ),
+                          onPressed: _addGroup,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Group'),
+                        )
+                        .animate()
+                        .fadeIn(delay: 400.ms, duration: 600.ms)
+                        .slideY(
+                          begin: 0.1,
+                          end: 0,
+                          delay: 400.ms,
+                          duration: 600.ms,
+                          curve: Curves.easeOutQuad,
+                        ),
                     const SizedBox(height: 48),
                     SizedBox(
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _saveConfig,
-                        child: const Text('Save Configuration'),
-                      ),
-                    ),
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _saveConfig,
+                            child: const Text('Save Configuration'),
+                          ),
+                        )
+                        .animate()
+                        .fadeIn(delay: 600.ms, duration: 600.ms)
+                        .slideY(
+                          begin: 0.1,
+                          end: 0,
+                          delay: 600.ms,
+                          duration: 600.ms,
+                          curve: Curves.easeOutQuad,
+                        ),
                   ],
                 ),
               ),
