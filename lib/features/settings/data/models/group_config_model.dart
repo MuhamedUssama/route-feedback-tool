@@ -20,12 +20,20 @@ class GroupConfigModel {
   @HiveField(4)
   final int assignmentEndRow;
 
+  @HiveField(5)
+  final int followUpStartRow;
+
+  @HiveField(6)
+  final int followUpEndRow;
+
   GroupConfigModel({
     required this.groupName,
     required this.isOnline,
     this.branchName,
     required this.assignmentStartRow,
     required this.assignmentEndRow,
+    required this.followUpStartRow,
+    required this.followUpEndRow,
   });
 
   factory GroupConfigModel.fromEntity(GroupConfigEntity entity) {
@@ -35,6 +43,8 @@ class GroupConfigModel {
       branchName: entity.branchName,
       assignmentStartRow: entity.assignmentStartRow,
       assignmentEndRow: entity.assignmentEndRow,
+      followUpStartRow: entity.followUpStartRow,
+      followUpEndRow: entity.followUpEndRow,
     );
   }
 
@@ -45,6 +55,8 @@ class GroupConfigModel {
       branchName: branchName,
       assignmentStartRow: assignmentStartRow,
       assignmentEndRow: assignmentEndRow,
+      followUpStartRow: followUpStartRow,
+      followUpEndRow: followUpEndRow,
     );
   }
 }

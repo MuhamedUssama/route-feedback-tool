@@ -6,6 +6,8 @@ class GroupConfigEntity extends Equatable {
   final String? branchName;
   final int assignmentStartRow;
   final int assignmentEndRow;
+  final int followUpStartRow;
+  final int followUpEndRow;
 
   const GroupConfigEntity({
     required this.groupName,
@@ -13,6 +15,8 @@ class GroupConfigEntity extends Equatable {
     this.branchName,
     required this.assignmentStartRow,
     required this.assignmentEndRow,
+    required this.followUpStartRow,
+    required this.followUpEndRow,
   });
 
   @override
@@ -22,5 +26,7 @@ class GroupConfigEntity extends Equatable {
     branchName,
     assignmentStartRow,
     assignmentEndRow,
+    followUpStartRow,
+    followUpEndRow,
   ];
 }

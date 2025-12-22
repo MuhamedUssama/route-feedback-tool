@@ -111,56 +111,62 @@ class _CycleConfigViewState extends State<_CycleConfigView> {
         );
       },
       child: Scaffold(
-        appBar: const CustomAppBar(title: 'Cycle Configuration'),
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(24),
-                children: [
-                  _buildSectionHeader(
-                    context,
-                    'General Info',
-                    Icons.info_outline,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildGeneralInfoCard(context),
+        appBar: const CustomAppBar(
+          withBackButton: true,
+          title: 'Cycle Configuration',
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    _buildSectionHeader(
+                      context,
+                      'General Info',
+                      Icons.info_outline,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildGeneralInfoCard(context),
 
-                  const SizedBox(height: 32),
-                  _buildSectionHeader(
-                    context,
-                    'Groups Management',
-                    Icons.group_outlined,
-                  ),
-                  const SizedBox(height: 16),
-                  ..._groupForms.asMap().entries.map(
-                    (entry) => _buildGroupCard(context, entry.key, entry.value),
-                  ),
+                    const SizedBox(height: 32),
+                    _buildSectionHeader(
+                      context,
+                      'Groups Management',
+                      Icons.group_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    ..._groupForms.asMap().entries.map(
+                      (entry) =>
+                          _buildGroupCard(context, entry.key, entry.value),
+                    ),
 
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: _addGroup,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Group'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.all(16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: _addGroup,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Group'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.all(16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 48),
-                  SizedBox(
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _saveConfig,
-                      child: const Text('Save Configuration'),
+                    const SizedBox(height: 48),
+                    SizedBox(
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _saveConfig,
+                        child: const Text('Save Configuration'),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -300,25 +306,105 @@ class _CycleConfigViewState extends State<_CycleConfigView> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
+                    const Text(
+                      'Row Configuration',
+                      // textAlign: TextAlign.center,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
                     Expanded(
-                      child: TextFormField(
-                        controller: form.startRowController,
-                        decoration: const InputDecoration(
-                          labelText: 'Start Row',
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Required' : null,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Assignment Sheet',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: form.startRowController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Start',
+                                    isDense: true,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) =>
+                                      value == null || value.isEmpty
+                                      ? 'Req'
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: form.endRowController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'End',
+                                    isDense: true,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) =>
+                                      value == null || value.isEmpty
+                                      ? 'Req'
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: TextFormField(
-                        controller: form.endRowController,
-                        decoration: const InputDecoration(labelText: 'End Row'),
-                        keyboardType: TextInputType.number,
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Required' : null,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Follow-up Sheet',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: form.followUpStartRowController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Start',
+                                    isDense: true,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) =>
+                                      value == null || value.isEmpty
+                                      ? 'Req'
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: form.followUpEndRowController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'End',
+                                    isDense: true,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) =>
+                                      value == null || value.isEmpty
+                                      ? 'Req'
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -336,6 +422,10 @@ class GroupFormModel {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController startRowController = TextEditingController();
   final TextEditingController endRowController = TextEditingController();
+  final TextEditingController followUpStartRowController =
+      TextEditingController();
+  final TextEditingController followUpEndRowController =
+      TextEditingController();
   bool isOnline = true;
   String? branchName;
 
@@ -346,6 +436,8 @@ class GroupFormModel {
     model.nameController.text = entity.groupName;
     model.startRowController.text = entity.assignmentStartRow.toString();
     model.endRowController.text = entity.assignmentEndRow.toString();
+    model.followUpStartRowController.text = entity.followUpStartRow.toString();
+    model.followUpEndRowController.text = entity.followUpEndRow.toString();
     model.isOnline = entity.isOnline;
     model.branchName = entity.branchName;
     return model;
@@ -355,6 +447,8 @@ class GroupFormModel {
     nameController.dispose();
     startRowController.dispose();
     endRowController.dispose();
+    followUpStartRowController.dispose();
+    followUpEndRowController.dispose();
   }
 
   GroupConfigEntity toEntity() {
@@ -364,6 +458,8 @@ class GroupFormModel {
       branchName: isOnline ? null : branchName,
       assignmentStartRow: int.parse(startRowController.text),
       assignmentEndRow: int.parse(endRowController.text),
+      followUpStartRow: int.parse(followUpStartRowController.text),
+      followUpEndRow: int.parse(followUpEndRowController.text),
     );
   }
 }

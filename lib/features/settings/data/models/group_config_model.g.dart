@@ -22,13 +22,15 @@ class GroupConfigModelAdapter extends TypeAdapter<GroupConfigModel> {
       branchName: fields[2] as String?,
       assignmentStartRow: (fields[3] as num).toInt(),
       assignmentEndRow: (fields[4] as num).toInt(),
+      followUpStartRow: (fields[5] as num).toInt(),
+      followUpEndRow: (fields[6] as num).toInt(),
     );
   }
 
   @override
   void write(BinaryWriter writer, GroupConfigModel obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.groupName)
       ..writeByte(1)
@@ -38,7 +40,11 @@ class GroupConfigModelAdapter extends TypeAdapter<GroupConfigModel> {
       ..writeByte(3)
       ..write(obj.assignmentStartRow)
       ..writeByte(4)
-      ..write(obj.assignmentEndRow);
+      ..write(obj.assignmentEndRow)
+      ..writeByte(5)
+      ..write(obj.followUpStartRow)
+      ..writeByte(6)
+      ..write(obj.followUpEndRow);
   }
 
   @override
