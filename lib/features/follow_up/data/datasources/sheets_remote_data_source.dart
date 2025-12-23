@@ -43,6 +43,14 @@ abstract interface class SheetsRemoteDataSource {
     required String spreadsheetId,
     required List<StudentStatusUpdateModel> updates,
   });
+
+  Future<List<String>> getColumnData({
+    required String spreadsheetId,
+    required int? sheetId, // Changed from sheetName to sheetId (GID)
+    required int columnIndex, // 0-based
+    required int startRow, // 1-based
+    required int endRow, // 1-based
+  });
 }
 
 @LazySingleton(as: SheetsRemoteDataSource)
@@ -529,11 +537,56 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
     }
   }
 
+  @override
+  Future<List<String>> getColumnData({
+    required String spreadsheetId,
+    required int? sheetId, // Changed to GID
+    required int columnIndex,
+    required int startRow,
+    required int endRow,
+  }) async {
+    try {
+      final sheetsApi = await _getSheetsApi();
+
+      // Resolve Sheet Name from GID
+      final sheetName = await _getSheetTitle(sheetsApi, spreadsheetId, sheetId);
+
+      final colLetter = _getColumnLetter(columnIndex);
+      final range = '$sheetName!$colLetter$startRow:$colLetter$endRow';
+
+      final response = await sheetsApi.spreadsheets.values.get(
+        spreadsheetId,
+        range,
+      );
+
+      final values = response.values;
+      if (values == null || values.isEmpty) {
+        // Return empty list of correct length
+        return List.filled(endRow - startRow + 1, '');
+      }
+
+      final result = <String>[];
+      final expectedCount = endRow - startRow + 1;
+
+      for (int i = 0; i < expectedCount; i++) {
+        if (i < values.length && values[i].isNotEmpty) {
+          result.add(values[i].first.toString().trim());
+        } else {
+          result.add('');
+        }
+      }
+
+      return result;
+    } catch (e) {
+      throw SheetException('Failed to fetch column data: $e');
+    }
+  }
+
   Color googleColorFrom(color.Color color) {
     return Color(
-      red: (color.r * 255.0).round().clamp(0, 255) / 255.0,
-      green: (color.g * 255.0).round().clamp(0, 255) / 255.0,
-      blue: (color.b * 255.0).round().clamp(0, 255) / 255.0,
+      red: (color.r * 255).round().clamp(0, 255) / 255.0,
+      green: (color.g * 255).round().clamp(0, 255) / 255.0,
+      blue: (color.b * 255).round().clamp(0, 255) / 255.0,
     );
   }
 

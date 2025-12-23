@@ -55,6 +55,11 @@ import '../../features/follow_up/presentation/cubits/follow_up_action/follow_up_
 import '../../features/follow_up/presentation/cubits/follow_up_config/follow_up_config_cubit.dart'
     as _i333;
 import '../../features/main_layout/cubit/navigation_cubit.dart' as _i406;
+import '../../features/report/data/repositories/report_repository_impl.dart'
+    as _i420;
+import '../../features/report/domain/repositories/report_repository.dart'
+    as _i23;
+import '../../features/report/presentation/cubits/report_cubit.dart' as _i1069;
 import '../../features/settings/data/datasources/cycle_local_data_source.dart'
     as _i1024;
 import '../../features/settings/data/repositories/cycle_repository_impl.dart'
@@ -122,11 +127,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1015.FollowUpLocalDataSource>(),
       ),
     );
+    gh.lazySingleton<_i23.ReportRepository>(
+      () => _i420.ReportRepositoryImpl(gh<_i850.SheetsRemoteDataSource>()),
+    );
     gh.lazySingleton<_i107.AuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSourceImpl(gh<_i527.GoogleAuthClient>()),
     );
     gh.singleton<_i34.ThemeCubit>(
       () => _i34.ThemeCubit(gh<_i674.SettingsRepository>()),
+    );
+    gh.factory<_i1069.ReportCubit>(
+      () => _i1069.ReportCubit(
+        gh<_i1024.CycleLocalDataSource>(),
+        gh<_i23.ReportRepository>(),
+        gh<_i934.FollowUpRepository>(),
+      ),
     );
     gh.lazySingleton<_i787.AuthRepository>(
       () => _i153.AuthRepositoryImpl(
