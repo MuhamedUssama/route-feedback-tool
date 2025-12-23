@@ -108,8 +108,12 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
           return state.maybeWhen(
             loading: () => const Center(child: CircularProgressIndicator()),
             noConfig: () => _buildNoConfigState(context),
-            ready: (groups, stats, loadingGroupNames, _) =>
-                _buildReportForm(context, groups, stats, loadingGroupNames),
+            ready: (config, stats, loadingGroupNames, _) => _buildReportForm(
+              context,
+              config.groups,
+              stats,
+              loadingGroupNames,
+            ),
             orElse: () => const SizedBox.shrink(),
           );
         },

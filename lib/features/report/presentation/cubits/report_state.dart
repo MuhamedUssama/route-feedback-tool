@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
+import 'package:mentor_assistant/features/settings/data/models/cycle_config_model.dart';
 
 part 'report_state.freezed.dart';
 
@@ -9,7 +9,7 @@ class ReportState with _$ReportState {
   const factory ReportState.loading() = _Loading;
   const factory ReportState.noConfig() = _NoConfig;
   const factory ReportState.ready({
-    required List<GroupConfigModel> groups,
+    required CycleConfigModel config,
     required Map<String, Map<String, int>>
     groupStats, // key: groupName, val: {submitted: 0, etc}
     @Default({}) Set<String> loadingGroupNames,

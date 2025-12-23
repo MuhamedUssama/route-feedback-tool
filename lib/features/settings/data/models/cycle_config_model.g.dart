@@ -19,6 +19,8 @@ class CycleConfigModelAdapter extends TypeAdapter<CycleConfigModel> {
     return CycleConfigModel(
       cycleNumber: (fields[0] as num).toInt(),
       trackName: fields[1] as String,
+      assignmentEmailColumn: fields[3] == null ? 'A' : fields[3] as String,
+      followUpEmailColumn: fields[4] == null ? 'A' : fields[4] as String,
       groups: (fields[2] as List).cast<GroupConfigModel>(),
     );
   }
@@ -26,13 +28,17 @@ class CycleConfigModelAdapter extends TypeAdapter<CycleConfigModel> {
   @override
   void write(BinaryWriter writer, CycleConfigModel obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.cycleNumber)
       ..writeByte(1)
       ..write(obj.trackName)
       ..writeByte(2)
-      ..write(obj.groups);
+      ..write(obj.groups)
+      ..writeByte(3)
+      ..write(obj.assignmentEmailColumn)
+      ..writeByte(4)
+      ..write(obj.followUpEmailColumn);
   }
 
   @override

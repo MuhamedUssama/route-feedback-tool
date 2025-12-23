@@ -27,7 +27,7 @@ class ReportCubit extends Cubit<ReportState> {
         return;
       }
 
-      emit(ReportState.ready(groups: config.groups, groupStats: {}));
+      emit(ReportState.ready(config: config, groupStats: {}));
     } catch (e) {
       emit(ReportState.error(e.toString()));
     }
@@ -89,6 +89,9 @@ class ReportCubit extends Cubit<ReportState> {
           followUpSheetUrl: config.followUpSheetUrl,
           assignmentColumn: assignmentCol,
           followUpColumn: followUpCol,
+          assignmentEmailAnchorColumn:
+              currentState.config.assignmentEmailColumn,
+          followUpEmailAnchorColumn: currentState.config.followUpEmailColumn,
         );
 
         statsResult.fold(

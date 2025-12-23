@@ -9,5 +9,7 @@ abstract interface class ReportRepository {
     required String followUpSheetUrl,
     required String assignmentColumn,
     required String followUpColumn,
+    required String assignmentEmailAnchorColumn,
+    required String followUpEmailAnchorColumn,
   });
 }

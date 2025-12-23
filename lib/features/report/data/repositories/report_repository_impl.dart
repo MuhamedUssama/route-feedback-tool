@@ -22,6 +22,8 @@ class ReportRepositoryImpl implements ReportRepository {
     required String followUpSheetUrl,
     required String assignmentColumn,
     required String followUpColumn,
+    required String assignmentEmailAnchorColumn,
+    required String followUpEmailAnchorColumn,
   }) async {
     // 1. Check Connectivity
     final isConnected = await ConnectivityHelper.checkInternetConnection();
@@ -42,34 +44,72 @@ class ReportRepositoryImpl implements ReportRepository {
       // We need to convert Column Letter to Index (0-based)
       final assignColIndex = _columnIndex(assignmentColumn);
       final followUpColIndex = _columnIndex(followUpColumn);
+      final assignAnchorColIndex = _columnIndex(assignmentEmailAnchorColumn);
+      final followUpAnchorColIndex = _columnIndex(followUpEmailAnchorColumn);
 
       log('assignmentStartRow: ${group.assignmentStartRow}');
       log('assignmentEndRow: ${group.assignmentEndRow}');
       log('followUpStartRow: ${group.followUpStartRow}');
       log('followUpEndRow: ${group.followUpEndRow}');
-      final assignmentData = await _remoteDataSource.getColumnData(
-        spreadsheetId: assignmentInfo.spreadsheetId,
-        sheetId: assignmentInfo.gid, // Passing GID instead of Name
-        columnIndex: assignColIndex,
-        startRow: group.assignmentStartRow,
-        endRow: group.assignmentEndRow,
-      );
 
-      final followUpData = await _remoteDataSource.getColumnData(
-        spreadsheetId: followUpInfo.spreadsheetId,
-        sheetId: followUpInfo.gid,
-        columnIndex: followUpColIndex,
-        startRow: group.followUpStartRow,
-        endRow: group.followUpEndRow,
-      );
+      final results = await Future.wait([
+        // 0: Assignment Data
+        _remoteDataSource.getColumnData(
+          spreadsheetId: assignmentInfo.spreadsheetId,
+          sheetId: assignmentInfo.gid,
+          columnIndex: assignColIndex,
+          startRow: group.assignmentStartRow,
+          endRow: group.assignmentEndRow,
+        ),
+        // 1: Assignment Anchor (Email)
+        _remoteDataSource.getColumnData(
+          spreadsheetId: assignmentInfo.spreadsheetId,
+          sheetId: assignmentInfo.gid,
+          columnIndex: assignAnchorColIndex,
+          startRow: group.assignmentStartRow,
+          endRow: group.assignmentEndRow,
+        ),
+        // 2: Follow-up Data
+        _remoteDataSource.getColumnData(
+          spreadsheetId: followUpInfo.spreadsheetId,
+          sheetId: followUpInfo.gid,
+          columnIndex: followUpColIndex,
+          startRow: group.followUpStartRow,
+          endRow: group.followUpEndRow,
+        ),
+        // 3: Follow-up Anchor (Email)
+        _remoteDataSource.getColumnData(
+          spreadsheetId: followUpInfo.spreadsheetId,
+          sheetId: followUpInfo.gid,
+          columnIndex: followUpAnchorColIndex,
+          startRow: group.followUpStartRow,
+          endRow: group.followUpEndRow,
+        ),
+      ]);
+
+      // Unpack results safely
+      final assignmentData = results[0];
+      final assignmentAnchorData = results[1];
+      final followUpData = results[2];
+      final followUpAnchorData = results[3];
 
       // 4. Calculate Stats (Decoupled Loops)
       int submitted = 0;
       int unsubmitted = 0;
       int followUp = 0;
 
-      // Loop 1: Calculate Assignment Stats
-      for (var val in assignmentData) {
+      // Loop 1: Calculate Assignment Stats with Anchor Check
+      for (int i = 0; i < assignmentData.length; i++) {
+        // Safety check for anchor data length
+        if (i >= assignmentAnchorData.length) break;
+
+        final anchorVal = assignmentAnchorData[i].trim();
+        if (anchorVal.isEmpty) {
+          // Skip if anchor is empty
+          continue;
+        }
+
+        final val = assignmentData[i];
         if (val.trim().isNotEmpty) {
           submitted++;
         } else {
@@ -77,14 +117,23 @@ class ReportRepositoryImpl implements ReportRepository {
         }
       }
 
-      // Loop 2: Calculate Follow-up Stats
-      for (var val in followUpData) {
+      // Loop 2: Calculate Follow-up Stats with Anchor Check
+      for (int i = 0; i < followUpData.length; i++) {
+        // Safety check for anchor data length
+        if (i >= followUpAnchorData.length) break;
+
+        final anchorVal = followUpAnchorData[i].trim();
+        if (anchorVal.isEmpty) {
+          // Skip if anchor is empty
+          continue;
+        }
+
+        final val = followUpData[i];
         final followUpVal = val.trim().toLowerCase();
         // Check for specific keywords
         if (followUpVal.contains('email sent') ||
             followUpVal.contains('sent') ||
             followUpVal.contains('emailsent')) {
-          // Added 'emailsent' based on your log just in case
           followUp++;
         }
       }
