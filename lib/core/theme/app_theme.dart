@@ -46,6 +46,7 @@ abstract class AppTheme {
         surface: baseColor,
         tertiary: _success,
         tertiaryContainer: _warning,
+        onPrimary: _textPrimaryDark,
       ),
       // AppBar
       appBarTheme: AppBarTheme(
@@ -223,6 +224,16 @@ abstract class AppTheme {
           minimumSize: WidgetStateProperty.all(const Size(double.infinity, 56)),
         ),
       ),
+
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: _primary,
+        foregroundColor: _textPrimaryDark,
+        elevation: 2,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+      ),
+
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
           foregroundColor: WidgetStateProperty.resolveWith((states) {
