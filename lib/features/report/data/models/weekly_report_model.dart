@@ -86,12 +86,14 @@ class LogisticsInfoDto {
 // ----------------------
 
 class WeeklyReportModel {
+  final String mentorName;
   final DateTime reportDate;
   final WorkshopInfoModel workshop;
   final List<GroupReportModel> groups;
   final List<LogisticsInfoModel> logistics;
 
   WeeklyReportModel({
+    required this.mentorName,
     required this.reportDate,
     required this.workshop,
     required this.groups,
@@ -116,6 +118,7 @@ class GroupReportModel {
   final int missingCount;
   final String assignmentColumn;
   final String followUpColumn;
+  final String branchName;
 
   GroupReportModel({
     required this.groupName,
@@ -127,6 +130,7 @@ class GroupReportModel {
     required this.missingCount,
     required this.assignmentColumn,
     required this.followUpColumn,
+    required this.branchName,
   });
 }
 

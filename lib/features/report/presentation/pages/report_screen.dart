@@ -6,6 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:mentor_assistant/core/services/pdf_generator_service.dart';
 import 'package:mentor_assistant/core/widgets/custom_appbar.dart';
+import 'package:mentor_assistant/features/auth/domain/entities/user_entity.dart';
 import 'package:mentor_assistant/features/report/data/models/weekly_report_model.dart';
 import 'package:mentor_assistant/features/report/presentation/cubits/report_cubit.dart';
 import 'package:mentor_assistant/features/report/presentation/cubits/report_state.dart';
@@ -56,7 +57,7 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
               SnackBar(content: Text(msg), backgroundColor: Colors.red),
             );
           },
-          ready: (_, _, _, errorMessage) {
+          ready: (_, _, _, _, errorMessage) {
             if (errorMessage != null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -77,7 +78,7 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
           body: state.maybeWhen(
             loading: () => const Center(child: CircularProgressIndicator()),
             noConfig: () => const ReportEmptyStateWidget(),
-            ready: (config, stats, loadingGroupNames, _) => Form(
+            ready: (config, stats, user, loadingGroupNames, _) => Form(
               key: _formKey,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               onChanged: () {
@@ -126,10 +127,8 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
     debugPrint('Refactoring: Workshop Topic: ${_dto.workshop.topic}');
 
     state.whenOrNull(
-      ready: (config, stats, _, __) {
-        // This is where we will combine DTO + Config + Stats to create WeeklyReportModel
-        // and call PdfGeneratorService.
-        _createAndPrintModel(config.groups, stats);
+      ready: (config, stats, user, _, _) {
+        _createAndPrintModel(config.groups, stats, user);
       },
     );
 
@@ -152,9 +151,11 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
   Future<void> _createAndPrintModel(
     List<GroupConfigModel> groups,
     Map<String, Map<String, int>> stats,
+    UserEntity? user,
   ) async {
     try {
       final report = WeeklyReportModel(
+        mentorName: user?.displayName ?? 'Mentor Name',
         reportDate: DateTime.now(),
         workshop: WorkshopInfoModel(
           topic: _dto.workshop.topic ?? 'N/A',
@@ -174,6 +175,7 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
             missingCount: gStats['unsubmitted'] ?? 0,
             assignmentColumn: gDto.assignmentColumn ?? '',
             followUpColumn: gDto.followUpColumn ?? '',
+            branchName: g.isOnline ? 'Online' : g.branchName ?? '',
           );
         }).toList(),
         logistics: groups.where((g) => !g.isOnline).map((g) {
@@ -188,7 +190,7 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
         }).toList(),
       );
 
-      final pdfService = PdfGeneratorService();
+      final PdfGeneratorService pdfService = PdfGeneratorService();
       final pdfBytes = await pdfService.generateReport(report);
 
       // Dynamic Filename Logic

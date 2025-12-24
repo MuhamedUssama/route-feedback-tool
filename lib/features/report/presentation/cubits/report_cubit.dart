@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mentor_assistant/features/auth/domain/repositories/auth_repository.dart';
 import 'package:mentor_assistant/features/follow_up/domain/repositories/follow_up_repository.dart';
 import 'package:mentor_assistant/features/report/domain/repositories/report_repository.dart';
 import 'package:mentor_assistant/features/settings/data/datasources/cycle_local_data_source.dart';
@@ -11,11 +12,13 @@ class ReportCubit extends Cubit<ReportState> {
   final CycleLocalDataSource _cycleLocalDataSource;
   final ReportRepository _reportRepository;
   final FollowUpRepository _followUpRepository;
+  final AuthRepository _authRepository;
 
   ReportCubit(
     this._cycleLocalDataSource,
     this._reportRepository,
     this._followUpRepository,
+    this._authRepository,
   ) : super(const ReportState.initial());
 
   Future<void> init() async {
@@ -27,7 +30,10 @@ class ReportCubit extends Cubit<ReportState> {
         return;
       }
 
-      emit(ReportState.ready(config: config, groupStats: {}));
+      final userResult = await _authRepository.getCachedUser();
+      final user = userResult.fold((_) => null, (user) => user);
+
+      emit(ReportState.ready(config: config, groupStats: {}, user: user!));
     } catch (e) {
       emit(ReportState.error(e.toString()));
     }

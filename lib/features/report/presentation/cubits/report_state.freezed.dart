@@ -131,13 +131,13 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function()?  noConfig,TResult Function( CycleConfigModel config,  Map<String, Map<String, int>> groupStats,  Set<String> loadingGroupNames,  String? errorMessage)?  ready,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function()?  noConfig,TResult Function( CycleConfigModel config,  Map<String, Map<String, int>> groupStats,  UserEntity? user,  Set<String> loadingGroupNames,  String? errorMessage)?  ready,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Loading() when loading != null:
 return loading();case _NoConfig() when noConfig != null:
 return noConfig();case _Ready() when ready != null:
-return ready(_that.config,_that.groupStats,_that.loadingGroupNames,_that.errorMessage);case _Error() when error != null:
+return ready(_that.config,_that.groupStats,_that.user,_that.loadingGroupNames,_that.errorMessage);case _Error() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -156,13 +156,13 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function()  noConfig,required TResult Function( CycleConfigModel config,  Map<String, Map<String, int>> groupStats,  Set<String> loadingGroupNames,  String? errorMessage)  ready,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function()  noConfig,required TResult Function( CycleConfigModel config,  Map<String, Map<String, int>> groupStats,  UserEntity? user,  Set<String> loadingGroupNames,  String? errorMessage)  ready,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _Loading():
 return loading();case _NoConfig():
 return noConfig();case _Ready():
-return ready(_that.config,_that.groupStats,_that.loadingGroupNames,_that.errorMessage);case _Error():
+return ready(_that.config,_that.groupStats,_that.user,_that.loadingGroupNames,_that.errorMessage);case _Error():
 return error(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -180,13 +180,13 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function()?  noConfig,TResult? Function( CycleConfigModel config,  Map<String, Map<String, int>> groupStats,  Set<String> loadingGroupNames,  String? errorMessage)?  ready,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function()?  noConfig,TResult? Function( CycleConfigModel config,  Map<String, Map<String, int>> groupStats,  UserEntity? user,  Set<String> loadingGroupNames,  String? errorMessage)?  ready,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Loading() when loading != null:
 return loading();case _NoConfig() when noConfig != null:
 return noConfig();case _Ready() when ready != null:
-return ready(_that.config,_that.groupStats,_that.loadingGroupNames,_that.errorMessage);case _Error() when error != null:
+return ready(_that.config,_that.groupStats,_that.user,_that.loadingGroupNames,_that.errorMessage);case _Error() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -295,7 +295,7 @@ String toString() {
 
 
 class _Ready implements ReportState {
-  const _Ready({required this.config, required final  Map<String, Map<String, int>> groupStats, final  Set<String> loadingGroupNames = const {}, this.errorMessage}): _groupStats = groupStats,_loadingGroupNames = loadingGroupNames;
+  const _Ready({required this.config, required final  Map<String, Map<String, int>> groupStats, required this.user, final  Set<String> loadingGroupNames = const {}, this.errorMessage}): _groupStats = groupStats,_loadingGroupNames = loadingGroupNames;
   
 
  final  CycleConfigModel config;
@@ -307,8 +307,8 @@ class _Ready implements ReportState {
 }
 
 // key: groupName, val: {submitted: 0, etc}
+ final  UserEntity? user;
  final  Set<String> _loadingGroupNames;
-// key: groupName, val: {submitted: 0, etc}
 @JsonKey() Set<String> get loadingGroupNames {
   if (_loadingGroupNames is EqualUnmodifiableSetView) return _loadingGroupNames;
   // ignore: implicit_dynamic_type
@@ -327,16 +327,16 @@ _$ReadyCopyWith<_Ready> get copyWith => __$ReadyCopyWithImpl<_Ready>(this, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Ready&&(identical(other.config, config) || other.config == config)&&const DeepCollectionEquality().equals(other._groupStats, _groupStats)&&const DeepCollectionEquality().equals(other._loadingGroupNames, _loadingGroupNames)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Ready&&(identical(other.config, config) || other.config == config)&&const DeepCollectionEquality().equals(other._groupStats, _groupStats)&&(identical(other.user, user) || other.user == user)&&const DeepCollectionEquality().equals(other._loadingGroupNames, _loadingGroupNames)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,config,const DeepCollectionEquality().hash(_groupStats),const DeepCollectionEquality().hash(_loadingGroupNames),errorMessage);
+int get hashCode => Object.hash(runtimeType,config,const DeepCollectionEquality().hash(_groupStats),user,const DeepCollectionEquality().hash(_loadingGroupNames),errorMessage);
 
 @override
 String toString() {
-  return 'ReportState.ready(config: $config, groupStats: $groupStats, loadingGroupNames: $loadingGroupNames, errorMessage: $errorMessage)';
+  return 'ReportState.ready(config: $config, groupStats: $groupStats, user: $user, loadingGroupNames: $loadingGroupNames, errorMessage: $errorMessage)';
 }
 
 
@@ -347,7 +347,7 @@ abstract mixin class _$ReadyCopyWith<$Res> implements $ReportStateCopyWith<$Res>
   factory _$ReadyCopyWith(_Ready value, $Res Function(_Ready) _then) = __$ReadyCopyWithImpl;
 @useResult
 $Res call({
- CycleConfigModel config, Map<String, Map<String, int>> groupStats, Set<String> loadingGroupNames, String? errorMessage
+ CycleConfigModel config, Map<String, Map<String, int>> groupStats, UserEntity? user, Set<String> loadingGroupNames, String? errorMessage
 });
 
 
@@ -364,11 +364,12 @@ class __$ReadyCopyWithImpl<$Res>
 
 /// Create a copy of ReportState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? config = null,Object? groupStats = null,Object? loadingGroupNames = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? config = null,Object? groupStats = null,Object? user = freezed,Object? loadingGroupNames = null,Object? errorMessage = freezed,}) {
   return _then(_Ready(
 config: null == config ? _self.config : config // ignore: cast_nullable_to_non_nullable
 as CycleConfigModel,groupStats: null == groupStats ? _self._groupStats : groupStats // ignore: cast_nullable_to_non_nullable
-as Map<String, Map<String, int>>,loadingGroupNames: null == loadingGroupNames ? _self._loadingGroupNames : loadingGroupNames // ignore: cast_nullable_to_non_nullable
+as Map<String, Map<String, int>>,user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
+as UserEntity?,loadingGroupNames: null == loadingGroupNames ? _self._loadingGroupNames : loadingGroupNames // ignore: cast_nullable_to_non_nullable
 as Set<String>,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

@@ -136,13 +136,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i34.ThemeCubit>(
       () => _i34.ThemeCubit(gh<_i674.SettingsRepository>()),
     );
-    gh.factory<_i1069.ReportCubit>(
-      () => _i1069.ReportCubit(
-        gh<_i1024.CycleLocalDataSource>(),
-        gh<_i23.ReportRepository>(),
-        gh<_i934.FollowUpRepository>(),
-      ),
-    );
     gh.lazySingleton<_i787.AuthRepository>(
       () => _i153.AuthRepositoryImpl(
         gh<_i107.AuthRemoteDataSource>(),
@@ -192,6 +185,14 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i333.FollowUpConfigCubit(
         gh<_i68.GetFollowUpConfigUseCase>(),
         gh<_i265.SaveFollowUpConfigUseCase>(),
+      ),
+    );
+    gh.factory<_i1069.ReportCubit>(
+      () => _i1069.ReportCubit(
+        gh<_i1024.CycleLocalDataSource>(),
+        gh<_i23.ReportRepository>(),
+        gh<_i934.FollowUpRepository>(),
+        gh<_i787.AuthRepository>(),
       ),
     );
     gh.factory<_i536.SettingsCubit>(

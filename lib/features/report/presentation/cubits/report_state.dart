@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:mentor_assistant/features/auth/domain/entities/user_entity.dart';
 import 'package:mentor_assistant/features/settings/data/models/cycle_config_model.dart';
 
 part 'report_state.freezed.dart';
@@ -12,6 +13,7 @@ class ReportState with _$ReportState {
     required CycleConfigModel config,
     required Map<String, Map<String, int>>
     groupStats, // key: groupName, val: {submitted: 0, etc}
+    required UserEntity? user,
     @Default({}) Set<String> loadingGroupNames,
     String? errorMessage,
   }) = _Ready;

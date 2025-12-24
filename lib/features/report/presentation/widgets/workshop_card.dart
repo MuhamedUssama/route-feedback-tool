@@ -53,15 +53,15 @@ class _WorkshopCardState extends State<WorkshopCard> {
                     ListTile(
                       title: Text(
                         state.value == null
-                            ? 'Select Functionality Date'
-                            : 'Date: ${DateFormat('yyyy-MM-dd').format(state.value!)}',
+                            ? 'Select Workshop Date'
+                            : 'Date: ${DateFormat('dd-MM-yyyy').format(state.value!)}',
                       ),
                       leading: const Icon(Icons.calendar_today),
                       shape: RoundedRectangleBorder(
                         side: BorderSide(
                           color: state.hasError ? Colors.red : Colors.grey,
                         ),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       onTap: () async {
                         final picked = await showDatePicker(

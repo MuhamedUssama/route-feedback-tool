@@ -95,7 +95,7 @@ class PdfGeneratorService {
               style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
             ),
             pw.Text(
-              'Mentor: Mohamed Osama',
+              'Mentor: ${report.mentorName}',
               style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
             ),
           ],
