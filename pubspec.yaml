@@ -53,4 +53,5 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/fonts/OpenSans-Regular.ttf
+    - assets/fonts/OpenSans-Bold.ttf
     - .env
