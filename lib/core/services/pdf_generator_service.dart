@@ -57,7 +57,7 @@ class PdfGeneratorService {
             pw.SizedBox(height: 20),
 
             if (report.logistics.isNotEmpty) ...[
-              _buildSectionTitle('Branched Attendance'),
+              _buildSectionTitle('Branches Attendance'),
               pw.SizedBox(height: 10),
               _buildLogisticsSection(report),
             ],
@@ -101,7 +101,7 @@ class PdfGeneratorService {
               style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
             ),
             pw.Text(
-              'Mentor: Nourhan Gimaey',
+              'Mentor: Mohamed Osama',
               style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
             ),
           ],
@@ -226,23 +226,23 @@ class PdfGeneratorService {
       children: [
         _buildSectionTitle('Workshop Details'),
         pw.SizedBox(height: 8),
-        pw.Container(
-          width: double.infinity,
-          padding: const pw.EdgeInsets.all(12),
-          decoration: pw.BoxDecoration(
-            border: pw.Border.all(color: PdfColors.grey300),
-            borderRadius: pw.BorderRadius.circular(4),
+        pw.TableHelper.fromTextArray(
+          context: null,
+          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+          headerStyle: pw.TextStyle(
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.white,
+            fontSize: 10,
           ),
-          child: pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Text(
-                'Topic: ${w.topic}',
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-              ),
-              pw.Text('Date: ${DateFormat('dd/MM/yyyy').format(w.date)}'),
-            ],
-          ),
+          headerDecoration: const pw.BoxDecoration(color: _routeBlue),
+          rowDecoration: const pw.BoxDecoration(color: PdfColors.white),
+          cellAlignment: pw.Alignment.center,
+          cellStyle: const pw.TextStyle(fontSize: 10, color: _textGrey),
+          cellPadding: const pw.EdgeInsets.all(5),
+          headers: ['Topic', 'Date'],
+          data: [
+            [w.topic, DateFormat('dd/MM/yyyy').format(w.date)],
+          ],
         ),
       ],
     );
@@ -311,20 +311,30 @@ class PdfGeneratorService {
     );
   }
 
-  // ... _buildLogisticsSection, _buildSectionTitle, _buildFooter (Same as before) ...
   pw.Widget _buildSectionTitle(String title) {
     return pw.Container(
-      padding: const pw.EdgeInsets.only(bottom: 4),
-      decoration: const pw.BoxDecoration(
-        border: pw.Border(bottom: pw.BorderSide(color: _routeBlue, width: 2)),
-      ),
-      child: pw.Text(
-        title,
-        style: pw.TextStyle(
-          fontSize: 14,
-          fontWeight: pw.FontWeight.bold,
-          color: _routeBlue,
+      width: double.infinity,
+      decoration: pw.BoxDecoration(
+        color: _lightGrey,
+        borderRadius: pw.BorderRadius.only(
+          bottomRight: pw.Radius.circular(4),
+          topRight: pw.Radius.circular(4),
         ),
+      ),
+      child: pw.Row(
+        children: [
+          pw.Container(width: 2, height: 24, color: _routeBlue),
+          pw.SizedBox(width: 8),
+          pw.Text(
+            title.toUpperCase(),
+            style: pw.TextStyle(
+              fontSize: 12,
+              fontWeight: pw.FontWeight.bold,
+              color: _routeBlue,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -342,37 +352,31 @@ class PdfGeneratorService {
   }
 
   pw.Widget _buildLogisticsSection(WeeklyReportModel report) {
-    return pw.Container(
-      decoration: pw.BoxDecoration(
-        borderRadius: pw.BorderRadius.circular(4),
-        border: pw.Border.all(color: PdfColors.black, width: 1),
+    return pw.TableHelper.fromTextArray(
+      context: null,
+      border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+      headerStyle: pw.TextStyle(
+        fontWeight: pw.FontWeight.bold,
+        color: PdfColors.white,
+        fontSize: 10,
       ),
-      child: pw.ClipRRect(
-        horizontalRadius: 4,
-        verticalRadius: 4,
-        child: pw.TableHelper.fromTextArray(
-          context: null,
-          headerStyle: pw.TextStyle(
-            fontWeight: pw.FontWeight.bold,
-            color: PdfColors.white,
-          ),
-          headerDecoration: const pw.BoxDecoration(color: _routeBlue),
-          rowDecoration: const pw.BoxDecoration(color: PdfColors.grey100),
-          cellAlignment: pw.Alignment.center,
-          headers: ['Group', 'Attended', 'Arrival', 'Leave', 'Exception'],
-          data: report.logistics
-              .map(
-                (info) => [
-                  info.groupName,
-                  info.visited ? 'Yes' : 'No',
-                  _formatTime(info.arrivalTime),
-                  _formatTime(info.leavingTime),
-                  info.exceptionReason ?? '-',
-                ],
-              )
-              .toList(),
-        ),
-      ),
+      headerDecoration: const pw.BoxDecoration(color: _routeBlue),
+      rowDecoration: const pw.BoxDecoration(color: PdfColors.white),
+      cellAlignment: pw.Alignment.center,
+      cellStyle: const pw.TextStyle(fontSize: 10, color: _textGrey),
+      cellPadding: const pw.EdgeInsets.all(5),
+      headers: ['Group', 'Attended', 'Arrival', 'Leave', 'Exception'],
+      data: report.logistics
+          .map(
+            (info) => [
+              info.groupName,
+              info.visited ? 'Yes' : 'No',
+              _formatTime(info.arrivalTime),
+              _formatTime(info.leavingTime),
+              info.exceptionReason ?? '-',
+            ],
+          )
+          .toList(),
     );
   }
 
