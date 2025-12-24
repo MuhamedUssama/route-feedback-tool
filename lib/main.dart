@@ -40,7 +40,7 @@ class MentorAssistant extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: themeMode,
             onGenerateRoute: AppRouter.onGenerateRoute,
-            initialRoute: AppRouter.loginRoute,
+            initialRoute: AppRouter.splashRoute,
           );
         },
       ),
