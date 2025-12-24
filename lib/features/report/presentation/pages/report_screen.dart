@@ -80,7 +80,7 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
             noConfig: () => const ReportEmptyStateWidget(),
             ready: (config, stats, user, loadingGroupNames, _) => Form(
               key: _formKey,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
+              // autovalidateMode: AutovalidateMode.disabled,
               onChanged: () {
                 setState(() {}); // specific rebuild to check _dto.isValid
               },
@@ -110,27 +110,26 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
   }
 
   void _generatePdf(BuildContext context, ReportState state) {
-    // if (_formKey.currentState?.validate() ?? false) {
-    _formKey.currentState!.save();
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState!.save();
 
-    state.whenOrNull(
-      ready: (config, stats, user, _, _) {
-        _createAndPrintModel(config, stats, user);
-      },
-    );
+      state.whenOrNull(
+        ready: (config, stats, user, _, _) {
+          _createAndPrintModel(config, stats, user);
+        },
+      );
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Processing Report...')));
-    // }
-    // else {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('Please fill all fields first'),
-    //       backgroundColor: Colors.red,
-    //     ),
-    //   );
-    // }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Processing Report...')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please fix validation errors'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   Future<void> _createAndPrintModel(
@@ -221,7 +220,7 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error generating PDF: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

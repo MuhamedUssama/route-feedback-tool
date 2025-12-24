@@ -104,8 +104,8 @@ class _GroupReportCardState extends State<GroupReportCard> {
                       final picked = await showDatePicker(
                         context: context,
                         initialDate: state.value ?? DateTime.now(),
-                        firstDate: DateTime(2023),
-                        lastDate: DateTime(2026),
+                        firstDate: DateTime(2025),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
                       );
                       if (picked != null) {
                         state.didChange(picked);
@@ -118,7 +118,7 @@ class _GroupReportCardState extends State<GroupReportCard> {
                         Text(
                           state.value == null
                               ? 'Select Deadline'
-                              : DateFormat('yyyy-MM-dd').format(state.value!),
+                              : DateFormat('dd-MM-yyyy').format(state.value!),
                         ),
                         const Icon(Icons.calendar_today),
                       ],
@@ -179,8 +179,13 @@ class _GroupReportCardState extends State<GroupReportCard> {
                               );
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please enter column names'),
+                                SnackBar(
+                                  content: Text(
+                                    'Please enter column names first',
+                                  ),
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.error,
                                 ),
                               );
                             }
