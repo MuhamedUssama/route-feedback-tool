@@ -3,19 +3,19 @@ import 'package:injectable/injectable.dart';
 import 'package:mentor_assistant/features/auth/domain/repositories/auth_repository.dart';
 import 'package:mentor_assistant/features/follow_up/domain/repositories/follow_up_repository.dart';
 import 'package:mentor_assistant/features/report/domain/repositories/report_repository.dart';
-import 'package:mentor_assistant/features/settings/data/datasources/cycle_local_data_source.dart';
-import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
+import 'package:mentor_assistant/features/settings/domain/entities/group_config_entity.dart';
+import 'package:mentor_assistant/features/settings/domain/repositories/cycle_repository.dart';
 import 'report_state.dart';
 
 @injectable
 class ReportCubit extends Cubit<ReportState> {
-  final CycleLocalDataSource _cycleLocalDataSource;
+  final CycleRepository _cycleRepository;
   final ReportRepository _reportRepository;
   final FollowUpRepository _followUpRepository;
   final AuthRepository _authRepository;
 
   ReportCubit(
-    this._cycleLocalDataSource,
+    this._cycleRepository,
     this._reportRepository,
     this._followUpRepository,
     this._authRepository,
@@ -24,7 +24,9 @@ class ReportCubit extends Cubit<ReportState> {
   Future<void> init() async {
     emit(const ReportState.loading());
     try {
-      final config = await _cycleLocalDataSource.getConfig();
+      final configResult = await _cycleRepository.getConfig();
+      final config = configResult.fold((_) => null, (config) => config);
+
       if (config == null || config.groups.isEmpty) {
         emit(const ReportState.noConfig());
         return;
@@ -40,7 +42,7 @@ class ReportCubit extends Cubit<ReportState> {
   }
 
   Future<void> calculateStatsForGroup(
-    GroupConfigModel group,
+    GroupConfigEntity group,
     String assignmentCol,
     String followUpCol,
   ) async {
@@ -96,8 +98,9 @@ class ReportCubit extends Cubit<ReportState> {
           assignmentColumn: assignmentCol,
           followUpColumn: followUpCol,
           assignmentEmailAnchorColumn:
-              currentState.config.assignmentEmailColumn,
-          followUpEmailAnchorColumn: currentState.config.followUpEmailColumn,
+              currentState.config?.assignmentEmailColumn ?? '',
+          followUpEmailAnchorColumn:
+              currentState.config?.followUpEmailColumn ?? '',
         );
 
         statsResult.fold(

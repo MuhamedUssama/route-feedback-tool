@@ -7,7 +7,7 @@ import 'package:mentor_assistant/core/services/connectivity_helper.dart';
 import 'package:mentor_assistant/core/utils/google_sheet_url_parser.dart';
 import 'package:mentor_assistant/features/follow_up/data/datasources/sheets_remote_data_source.dart';
 import 'package:mentor_assistant/features/report/domain/repositories/report_repository.dart';
-import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
+import 'package:mentor_assistant/features/settings/domain/entities/group_config_entity.dart';
 
 @LazySingleton(as: ReportRepository)
 class ReportRepositoryImpl implements ReportRepository {
@@ -17,7 +17,7 @@ class ReportRepositoryImpl implements ReportRepository {
 
   @override
   Future<Either<Failure, Map<String, int>>> calculateGroupStats({
-    required GroupConfigModel group,
+    required GroupConfigEntity group,
     required String assignmentSheetUrl,
     required String followUpSheetUrl,
     required String assignmentColumn,

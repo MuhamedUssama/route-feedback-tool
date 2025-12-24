@@ -65,7 +65,7 @@ class GroupReportDto {
 }
 
 class LogisticsInfoDto {
-  bool visited = false;
+  bool visited = true;
   String? exceptionReason;
   TimeOfDay? arrivalTime;
   TimeOfDay? leavingTime;

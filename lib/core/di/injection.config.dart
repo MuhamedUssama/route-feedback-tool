@@ -187,14 +187,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i265.SaveFollowUpConfigUseCase>(),
       ),
     );
-    gh.factory<_i1069.ReportCubit>(
-      () => _i1069.ReportCubit(
-        gh<_i1024.CycleLocalDataSource>(),
-        gh<_i23.ReportRepository>(),
-        gh<_i934.FollowUpRepository>(),
-        gh<_i787.AuthRepository>(),
-      ),
-    );
     gh.factory<_i536.SettingsCubit>(
       () => _i536.SettingsCubit(
         gh<_i787.AuthRepository>(),
@@ -216,6 +208,14 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i117.AuthCubit>(
       () => _i117.AuthCubit(gh<_i57.LoginWithGoogleUseCase>()),
+    );
+    gh.factory<_i1069.ReportCubit>(
+      () => _i1069.ReportCubit(
+        gh<_i797.CycleRepository>(),
+        gh<_i23.ReportRepository>(),
+        gh<_i934.FollowUpRepository>(),
+        gh<_i787.AuthRepository>(),
+      ),
     );
     return this;
   }

@@ -232,7 +232,11 @@ abstract class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: _primary,
         foregroundColor: _textPrimaryDark,
-        elevation: 2,
+        elevation: 8,
+        extendedPadding: const EdgeInsets.symmetric(
+          horizontal: 24,
+          vertical: 16,
+        ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),

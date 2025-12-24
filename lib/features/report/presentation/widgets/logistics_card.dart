@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
+import 'package:mentor_assistant/features/settings/domain/entities/group_config_entity.dart';
 import 'package:mentor_assistant/features/report/data/models/weekly_report_model.dart';
 
 class LogisticsCard extends StatefulWidget {
-  final GroupConfigModel group;
+  final GroupConfigEntity group;
   final LogisticsInfoDto dto;
 
   const LogisticsCard({super.key, required this.group, required this.dto});

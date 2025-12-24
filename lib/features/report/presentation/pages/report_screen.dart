@@ -12,7 +12,7 @@ import 'package:mentor_assistant/features/report/presentation/cubits/report_cubi
 import 'package:mentor_assistant/features/report/presentation/cubits/report_state.dart';
 import 'package:mentor_assistant/features/report/presentation/widgets/report_empty_state_widget.dart';
 import 'package:mentor_assistant/features/report/presentation/widgets/report_form_widget.dart';
-import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
+import 'package:mentor_assistant/features/settings/domain/entities/cycle_config_entity.dart';
 import 'package:printing/printing.dart';
 
 class ReportScreen extends StatelessWidget {
@@ -85,7 +85,7 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
                 setState(() {}); // specific rebuild to check _dto.isValid
               },
               child: ReportFormWidget(
-                groups: config.groups,
+                groups: config?.groups ?? [],
                 stats: stats,
                 loadingGroupNames: loadingGroupNames.toList(),
                 dto: _dto,
@@ -95,26 +95,17 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
           ),
           floatingActionButton: state.maybeWhen(
             noConfig: () => null,
-            orElse: () => _buildFab(context, _dto.isValid, state),
+            orElse: () => ElevatedButton.icon(
+              onPressed: _dto.isValid
+                  ? () => _generatePdf(context, state)
+                  : null,
+              icon: const Icon(Icons.picture_as_pdf_rounded),
+              label: const Text('Generate PDF'),
+              style: ElevatedButton.styleFrom(minimumSize: const Size(250, 56)),
+            ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildFab(BuildContext context, bool isValid, ReportState state) {
-    final fab = FloatingActionButton.extended(
-      onPressed: isValid ? () => _generatePdf(context, state) : null,
-      label: const Text('Generate PDF'),
-      icon: const Icon(Icons.picture_as_pdf),
-      backgroundColor: isValid ? null : Theme.of(context).disabledColor,
-    );
-
-    if (isValid) return fab;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.basic,
-      child: AbsorbPointer(child: fab),
     );
   }
 
@@ -122,21 +113,15 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
     // if (_formKey.currentState?.validate() ?? false) {
     _formKey.currentState!.save();
 
-    // Verification: Print harvested data
-    debugPrint('Harvesting Complete:');
-    debugPrint('Refactoring: Workshop Topic: ${_dto.workshop.topic}');
-
     state.whenOrNull(
       ready: (config, stats, user, _, _) {
-        _createAndPrintModel(config.groups, stats, user);
+        _createAndPrintModel(config, stats, user);
       },
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Processing Report... (Check Debug Console)'),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Processing Report...')));
     // }
     // else {
     //   ScaffoldMessenger.of(context).showSnackBar(
@@ -149,7 +134,7 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
   }
 
   Future<void> _createAndPrintModel(
-    List<GroupConfigModel> groups,
+    CycleConfigEntity? config,
     Map<String, Map<String, int>> stats,
     UserEntity? user,
   ) async {
@@ -161,54 +146,50 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
           topic: _dto.workshop.topic ?? 'N/A',
           date: _dto.workshop.date ?? DateTime.now(),
         ),
-        groups: groups.map((g) {
-          final gDto = _dto.getGroup(g.groupName);
-          final gStats =
-              stats[g.groupName] ?? {'submitted': 0, 'unsubmitted': 0};
-          return GroupReportModel(
-            groupName: g.groupName,
-            assignmentNumber: gDto.assignmentNumber ?? '',
-            assignmentName: gDto.assignmentName ?? '',
-            deadline: gDto.deadline,
-            feedbackDone: gDto.feedbackDone,
-            submittedCount: gStats['submitted'] ?? 0,
-            missingCount: gStats['unsubmitted'] ?? 0,
-            assignmentColumn: gDto.assignmentColumn ?? '',
-            followUpColumn: gDto.followUpColumn ?? '',
-            branchName: g.isOnline ? 'Online' : g.branchName ?? '',
-          );
-        }).toList(),
-        logistics: groups.where((g) => !g.isOnline).map((g) {
-          final lDto = _dto.getLogistics(g.groupName);
-          return LogisticsInfoModel(
-            groupName: g.groupName,
-            visited: lDto.visited,
-            exceptionReason: lDto.exceptionReason,
-            arrivalTime: lDto.arrivalTime,
-            leavingTime: lDto.leavingTime,
-          );
-        }).toList(),
+        groups:
+            config?.groups.map((g) {
+              final GroupReportDto gDto = _dto.getGroup(g.groupName);
+              final gStats =
+                  stats[g.groupName] ?? {'submitted': 0, 'unsubmitted': 0};
+              return GroupReportModel(
+                groupName: g.groupName,
+                assignmentNumber: gDto.assignmentNumber ?? '',
+                assignmentName: gDto.assignmentName ?? '',
+                deadline: gDto.deadline,
+                feedbackDone: gDto.feedbackDone,
+                submittedCount: gStats['submitted'] ?? 0,
+                missingCount: gStats['unsubmitted'] ?? 0,
+                assignmentColumn: gDto.assignmentColumn ?? '',
+                followUpColumn: gDto.followUpColumn ?? '',
+                branchName: g.isOnline ? 'Online' : g.branchName ?? '',
+              );
+            }).toList() ??
+            [],
+        logistics:
+            config?.groups.where((g) => !g.isOnline).map((g) {
+              final lDto = _dto.getLogistics(g.groupName);
+              return LogisticsInfoModel(
+                groupName: g.groupName,
+                visited: lDto.visited,
+                exceptionReason: lDto.exceptionReason,
+                arrivalTime: lDto.arrivalTime,
+                leavingTime: lDto.leavingTime,
+              );
+            }).toList() ??
+            [],
       );
 
       final PdfGeneratorService pdfService = PdfGeneratorService();
       final pdfBytes = await pdfService.generateReport(report);
 
-      // Dynamic Filename Logic
-      // [MentorName] - [TrackName] ([CycleName]) - [Date].pdf
-
-      String mentorName = "Mohamed Osama";
-
-      String trackName = "Track";
-
-      if (groups.isNotEmpty) {
-        trackName = groups.first.groupName;
-      }
-
-      final dateStr = DateFormat('d MMMM').format(DateTime.now());
-      final fileName = '$mentorName - $trackName - $dateStr.pdf';
+      String mentorName = user?.displayName ?? 'Mentor Name';
+      String trackName = config?.trackName ?? 'Track Name';
+      final String dateStr = DateFormat('d MMMM').format(DateTime.now());
+      final String fileName =
+          '$mentorName-$trackName(C${config?.cycleNumber})-$dateStr.pdf';
 
       if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-        final outputFile = await FilePicker.platform.saveFile(
+        final String? outputFile = await FilePicker.platform.saveFile(
           dialogTitle: 'Save Report',
           fileName: fileName,
           allowedExtensions: ['pdf'],

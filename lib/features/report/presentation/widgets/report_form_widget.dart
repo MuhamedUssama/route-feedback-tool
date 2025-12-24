@@ -4,12 +4,12 @@ import 'package:mentor_assistant/features/report/presentation/cubits/report_cubi
 import 'package:mentor_assistant/features/report/presentation/widgets/group_report_card.dart';
 import 'package:mentor_assistant/features/report/presentation/widgets/logistics_card.dart';
 import 'package:mentor_assistant/features/report/presentation/widgets/workshop_card.dart';
-import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
+import 'package:mentor_assistant/features/settings/domain/entities/group_config_entity.dart';
 import 'package:mentor_assistant/features/settings/presentation/widgets/config_section_header.dart';
 import 'package:mentor_assistant/features/report/data/models/weekly_report_model.dart';
 
 class ReportFormWidget extends StatelessWidget {
-  final List<GroupConfigModel> groups;
+  final List<GroupConfigEntity> groups;
   final Map<String, Map<String, int>> stats;
   final List<String> loadingGroupNames;
   final WeeklyReportDto dto;

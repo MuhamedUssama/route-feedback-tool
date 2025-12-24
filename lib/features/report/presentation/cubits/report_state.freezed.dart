@@ -131,7 +131,7 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function()?  noConfig,TResult Function( CycleConfigModel config,  Map<String, Map<String, int>> groupStats,  UserEntity? user,  Set<String> loadingGroupNames,  String? errorMessage)?  ready,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function()?  noConfig,TResult Function( CycleConfigEntity? config,  Map<String, Map<String, int>> groupStats,  UserEntity? user,  Set<String> loadingGroupNames,  String? errorMessage)?  ready,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Loading() when loading != null:
@@ -156,7 +156,7 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function()  noConfig,required TResult Function( CycleConfigModel config,  Map<String, Map<String, int>> groupStats,  UserEntity? user,  Set<String> loadingGroupNames,  String? errorMessage)  ready,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function()  noConfig,required TResult Function( CycleConfigEntity? config,  Map<String, Map<String, int>> groupStats,  UserEntity? user,  Set<String> loadingGroupNames,  String? errorMessage)  ready,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _Loading():
@@ -180,7 +180,7 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function()?  noConfig,TResult? Function( CycleConfigModel config,  Map<String, Map<String, int>> groupStats,  UserEntity? user,  Set<String> loadingGroupNames,  String? errorMessage)?  ready,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function()?  noConfig,TResult? Function( CycleConfigEntity? config,  Map<String, Map<String, int>> groupStats,  UserEntity? user,  Set<String> loadingGroupNames,  String? errorMessage)?  ready,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Loading() when loading != null:
@@ -298,7 +298,7 @@ class _Ready implements ReportState {
   const _Ready({required this.config, required final  Map<String, Map<String, int>> groupStats, required this.user, final  Set<String> loadingGroupNames = const {}, this.errorMessage}): _groupStats = groupStats,_loadingGroupNames = loadingGroupNames;
   
 
- final  CycleConfigModel config;
+ final  CycleConfigEntity? config;
  final  Map<String, Map<String, int>> _groupStats;
  Map<String, Map<String, int>> get groupStats {
   if (_groupStats is EqualUnmodifiableMapView) return _groupStats;
@@ -347,7 +347,7 @@ abstract mixin class _$ReadyCopyWith<$Res> implements $ReportStateCopyWith<$Res>
   factory _$ReadyCopyWith(_Ready value, $Res Function(_Ready) _then) = __$ReadyCopyWithImpl;
 @useResult
 $Res call({
- CycleConfigModel config, Map<String, Map<String, int>> groupStats, UserEntity? user, Set<String> loadingGroupNames, String? errorMessage
+ CycleConfigEntity? config, Map<String, Map<String, int>> groupStats, UserEntity? user, Set<String> loadingGroupNames, String? errorMessage
 });
 
 
@@ -364,10 +364,10 @@ class __$ReadyCopyWithImpl<$Res>
 
 /// Create a copy of ReportState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? config = null,Object? groupStats = null,Object? user = freezed,Object? loadingGroupNames = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? config = freezed,Object? groupStats = null,Object? user = freezed,Object? loadingGroupNames = null,Object? errorMessage = freezed,}) {
   return _then(_Ready(
-config: null == config ? _self.config : config // ignore: cast_nullable_to_non_nullable
-as CycleConfigModel,groupStats: null == groupStats ? _self._groupStats : groupStats // ignore: cast_nullable_to_non_nullable
+config: freezed == config ? _self.config : config // ignore: cast_nullable_to_non_nullable
+as CycleConfigEntity?,groupStats: null == groupStats ? _self._groupStats : groupStats // ignore: cast_nullable_to_non_nullable
 as Map<String, Map<String, int>>,user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as UserEntity?,loadingGroupNames: null == loadingGroupNames ? _self._loadingGroupNames : loadingGroupNames // ignore: cast_nullable_to_non_nullable
 as Set<String>,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable

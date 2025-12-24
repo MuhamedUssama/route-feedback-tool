@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:mentor_assistant/core/errors/failures.dart';
-import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
+import 'package:mentor_assistant/features/settings/domain/entities/group_config_entity.dart';
 
 abstract interface class ReportRepository {
   Future<Either<Failure, Map<String, int>>> calculateGroupStats({
-    required GroupConfigModel group,
+    required GroupConfigEntity group,
     required String assignmentSheetUrl,
     required String followUpSheetUrl,
     required String assignmentColumn,

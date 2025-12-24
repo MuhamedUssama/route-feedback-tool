@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
+import 'package:mentor_assistant/features/settings/domain/entities/group_config_entity.dart';
 import 'package:mentor_assistant/features/report/presentation/widgets/report_stat_chip.dart';
 import 'package:mentor_assistant/features/report/data/models/weekly_report_model.dart';
 
 class GroupReportCard extends StatefulWidget {
-  final GroupConfigModel group;
+  final GroupConfigEntity group;
   final GroupReportDto dto;
   final Map<String, int>? stats;
   final bool isCalculating;
@@ -27,7 +27,6 @@ class GroupReportCard extends StatefulWidget {
 
 class _GroupReportCardState extends State<GroupReportCard> {
   @override
-  @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -41,7 +40,7 @@ class _GroupReportCardState extends State<GroupReportCard> {
               children: [
                 Expanded(
                   child: Text(
-                    widget.group.groupName,
+                    '${widget.group.groupName} - ${widget.group.branchName ?? 'Online'}',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -138,7 +137,7 @@ class _GroupReportCardState extends State<GroupReportCard> {
                     decoration: const InputDecoration(
                       labelText: 'Assignment Column',
                       border: OutlineInputBorder(),
-                      hintText: 'e.g., AD',
+                      hintText: 'e.g., H',
                     ),
                     onSaved: (val) => widget.dto.assignmentColumn = val,
                     onChanged: (val) => widget.dto.assignmentColumn = val,
@@ -153,7 +152,7 @@ class _GroupReportCardState extends State<GroupReportCard> {
                     decoration: const InputDecoration(
                       labelText: 'Follow-Up Column',
                       border: OutlineInputBorder(),
-                      hintText: 'e.g., AE',
+                      hintText: 'e.g., D',
                     ),
                     onSaved: (val) => widget.dto.followUpColumn = val,
                     onChanged: (val) => widget.dto.followUpColumn = val,
@@ -198,6 +197,7 @@ class _GroupReportCardState extends State<GroupReportCard> {
                 ),
                 const SizedBox(width: 24),
                 Row(
+                  spacing: 8,
                   children: [
                     const Text('Feedback Done?'),
                     Switch(
