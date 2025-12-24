@@ -3,9 +3,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
 import 'package:mentor_assistant/features/report/presentation/widgets/report_stat_chip.dart';
+import 'package:mentor_assistant/features/report/data/models/weekly_report_model.dart';
 
 class GroupReportCard extends StatefulWidget {
   final GroupConfigModel group;
+  final GroupReportDto dto;
   final Map<String, int>? stats;
   final bool isCalculating;
   final Function(String assignCol, String followUpCol) onCalculateStats;
@@ -13,6 +15,7 @@ class GroupReportCard extends StatefulWidget {
   const GroupReportCard({
     super.key,
     required this.group,
+    required this.dto,
     this.stats,
     this.isCalculating = false,
     required this.onCalculateStats,
@@ -23,34 +26,7 @@ class GroupReportCard extends StatefulWidget {
 }
 
 class _GroupReportCardState extends State<GroupReportCard> {
-  // Controllers
-  late final TextEditingController _assignNameController;
-  late final TextEditingController _assignNumberController;
-  late final TextEditingController _assignColController;
-  late final TextEditingController _followUpColController;
-
-  // Local State
-  DateTime? _deadline;
-  bool _feedbackDone = false;
-
   @override
-  void initState() {
-    super.initState();
-    _assignNameController = TextEditingController();
-    _assignNumberController = TextEditingController();
-    _assignColController = TextEditingController();
-    _followUpColController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _assignNameController.dispose();
-    _assignNumberController.dispose();
-    _assignColController.dispose();
-    _followUpColController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -71,139 +47,171 @@ class _GroupReportCardState extends State<GroupReportCard> {
                     ),
                   ),
                 ),
-                const Text('Feedback Done?'),
-                const SizedBox(width: 8),
-                Switch(
-                  value: _feedbackDone,
-                  onChanged: (val) {
-                    setState(() {
-                      _feedbackDone = val;
-                      // Logic for when feedback is marked done
-                    });
-                  },
-                ),
               ],
             ),
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 16),
 
-            // Assignment Details Inputs
+            // 2. Assignment Details (Row 1)
             Row(
               children: [
                 Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: _assignNumberController,
+                  child: TextFormField(
+                    initialValue: widget.dto.assignmentNumber,
                     decoration: const InputDecoration(
                       labelText: 'Assignment No.',
-                      isDense: true,
+                      border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
+                    onSaved: (val) => widget.dto.assignmentNumber = val,
+                    onChanged: (val) => widget.dto.assignmentNumber = val,
+                    validator: (val) =>
+                        (val == null || val.isEmpty) ? 'Required' : null,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
-                  flex: 3,
-                  child: InputDecorator(
-                    decoration: InputDecoration(
-                      labelText: 'Deadline',
-                      isDense: true,
-                      suffixIcon: IconButton(
-                        tooltip: 'Select Deadline Date',
-                        icon: const Icon(Icons.calendar_today, size: 16),
-                        onPressed: () async {
-                          final now = DateTime.now();
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _deadline ?? now,
-                            firstDate: now.subtract(const Duration(days: 30)),
-                            lastDate: now.add(const Duration(days: 60)),
-                          );
-                          if (date != null) {
-                            setState(() => _deadline = date);
-                          }
-                        },
-                      ),
+                  flex: 2,
+                  child: TextFormField(
+                    initialValue: widget.dto.assignmentName,
+                    decoration: const InputDecoration(
+                      labelText: 'Assignment Name',
+                      border: OutlineInputBorder(),
                     ),
-                    child: Text(
-                      _deadline != null
-                          ? DateFormat('dd/MM/yyyy').format(_deadline!)
-                          : 'Select Deadline Date',
-                    ),
+                    onSaved: (val) => widget.dto.assignmentName = val,
+                    onChanged: (val) => widget.dto.assignmentName = val,
+                    validator: (val) =>
+                        (val == null || val.isEmpty) ? 'Required' : null,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _assignNameController,
-              decoration: const InputDecoration(
-                labelText: 'Assignment Name',
-                isDense: true,
-              ),
+            const SizedBox(height: 16),
+            // 3. Deadline Picker
+            FormField<DateTime>(
+              initialValue: widget.dto.deadline,
+              onSaved: (val) => widget.dto.deadline = val,
+              validator: (val) => val == null ? 'Required' : null,
+              builder: (state) {
+                return InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Deadline',
+                    border: const OutlineInputBorder(),
+                    errorText: state.errorText,
+                  ),
+                  child: InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: state.value ?? DateTime.now(),
+                        firstDate: DateTime(2023),
+                        lastDate: DateTime(2026),
+                      );
+                      if (picked != null) {
+                        state.didChange(picked);
+                        widget.dto.deadline = picked;
+                      }
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          state.value == null
+                              ? 'Select Deadline'
+                              : DateFormat('yyyy-MM-dd').format(state.value!),
+                        ),
+                        const Icon(Icons.calendar_today),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
-
-            // Automation Inputs
+            // 4. Columns (Row 2)
             Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _assignColController,
+                  child: TextFormField(
+                    initialValue: widget.dto.assignmentColumn,
                     decoration: const InputDecoration(
-                      labelText: 'Assignment Column (ex. H)',
-                      isDense: true,
+                      labelText: 'Assignment Column',
+                      border: OutlineInputBorder(),
+                      hintText: 'e.g., AD',
                     ),
+                    onSaved: (val) => widget.dto.assignmentColumn = val,
+                    onChanged: (val) => widget.dto.assignmentColumn = val,
+                    validator: (val) =>
+                        (val == null || val.isEmpty) ? 'Required' : null,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: TextField(
-                    controller: _followUpColController,
+                  child: TextFormField(
+                    initialValue: widget.dto.followUpColumn,
                     decoration: const InputDecoration(
-                      labelText: 'Follow-Up Column (ex. K)',
-                      isDense: true,
+                      labelText: 'Follow-Up Column',
+                      border: OutlineInputBorder(),
+                      hintText: 'e.g., AE',
                     ),
+                    onSaved: (val) => widget.dto.followUpColumn = val,
+                    onChanged: (val) => widget.dto.followUpColumn = val,
+                    validator: (val) =>
+                        (val == null || val.isEmpty) ? 'Required' : null,
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filled(
-                  onPressed: widget.isCalculating
-                      ? null
-                      : () {
-                          final assignCol = _assignColController.text.trim();
-                          final fupCol = _followUpColController.text.trim();
-
-                          if (assignCol.isEmpty || fupCol.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please enter both columns'),
-                              ),
-                            );
-                            return;
-                          }
-
-                          widget.onCalculateStats(assignCol, fupCol);
-                        },
-                  icon: widget.isCalculating
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Icon(
-                          Icons.analytics,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                  tooltip: 'Calculate Stats',
                 ),
               ],
             ),
-
+            const SizedBox(height: 24),
+            // 5. Stats & Feedback Switch
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: widget.isCalculating
+                        ? null
+                        : () {
+                            if (widget.dto.assignmentColumn != null &&
+                                widget.dto.followUpColumn != null) {
+                              widget.onCalculateStats(
+                                widget.dto.assignmentColumn!,
+                                widget.dto.followUpColumn!,
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please enter column names'),
+                                ),
+                              );
+                            }
+                          },
+                    icon: widget.isCalculating
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.calculate),
+                    label: const Text('Calculate Stats'),
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Row(
+                  children: [
+                    const Text('Feedback Done?'),
+                    Switch(
+                      value: widget.dto.feedbackDone,
+                      onChanged: (val) {
+                        setState(() {
+                          widget.dto.feedbackDone = val;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
             // Stats Display
             if (widget.stats != null)

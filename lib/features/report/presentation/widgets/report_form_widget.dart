@@ -6,17 +6,20 @@ import 'package:mentor_assistant/features/report/presentation/widgets/logistics_
 import 'package:mentor_assistant/features/report/presentation/widgets/workshop_card.dart';
 import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
 import 'package:mentor_assistant/features/settings/presentation/widgets/config_section_header.dart';
+import 'package:mentor_assistant/features/report/data/models/weekly_report_model.dart';
 
 class ReportFormWidget extends StatelessWidget {
   final List<GroupConfigModel> groups;
   final Map<String, Map<String, int>> stats;
   final List<String> loadingGroupNames;
+  final WeeklyReportDto dto;
 
   const ReportFormWidget({
     super.key,
     required this.groups,
     required this.stats,
     required this.loadingGroupNames,
+    required this.dto,
   });
 
   @override
@@ -40,6 +43,7 @@ class ReportFormWidget extends StatelessWidget {
               ...groups.map(
                 (group) => GroupReportCard(
                   group: group,
+                  dto: dto.getGroup(group.groupName),
                   stats: stats[group.groupName],
                   isCalculating: loadingGroupNames.contains(group.groupName),
                   onCalculateStats: (assignCol, followUpCol) {
@@ -58,7 +62,7 @@ class ReportFormWidget extends StatelessWidget {
                 icon: Icons.lightbulb,
               ),
               const SizedBox(height: 16),
-              const WorkshopCard(),
+              WorkshopCard(dto: dto.workshop),
               const SizedBox(height: 24),
               // 3. Logistics
               if (offlineGroups.isNotEmpty) ...[
@@ -67,11 +71,13 @@ class ReportFormWidget extends StatelessWidget {
                   icon: Icons.location_city_rounded,
                 ),
                 const SizedBox(height: 16),
-
-                ...offlineGroups.map((group) => LogisticsCard(group: group)),
+                ...offlineGroups.map(
+                  (group) => LogisticsCard(
+                    group: group,
+                    dto: dto.getLogistics(group.groupName),
+                  ),
+                ),
               ],
-
-              // const SizedBox(height: 80),
             ],
           ),
         ),
