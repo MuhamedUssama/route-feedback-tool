@@ -31,12 +31,16 @@ abstract class AppTheme {
     final baseColor = isDark ? _scaffoldDark : _surfaceLight;
     final primaryText = isDark ? _textPrimaryDark : _textPrimaryLight;
     final secondaryText = isDark ? _textSecondaryDark : _textSecondaryLight;
+    final disabledBackgroundColor = isDark ? _surfaceDark : Colors.grey[600];
+    final disabledForegroundColor = isDark
+        ? Colors.grey[600]
+        : Colors.grey[300];
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       scaffoldBackgroundColor: baseColor,
-      disabledColor: isDark ? Color(0XFF6d6d6d) : _textSecondaryLight,
+      disabledColor: disabledBackgroundColor,
       colorScheme: ColorScheme.fromSeed(
         seedColor: _primary,
         brightness: brightness,
@@ -46,6 +50,7 @@ abstract class AppTheme {
         surface: baseColor,
         tertiary: _success,
         tertiaryContainer: _warning,
+        onPrimary: _textPrimaryDark,
       ),
       // AppBar
       appBarTheme: AppBarTheme(
@@ -151,13 +156,13 @@ abstract class AppTheme {
         style: ButtonStyle(
           backgroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) {
-              return isDark ? _surfaceDark : Colors.grey[300];
+              return disabledBackgroundColor;
             }
             return _primary;
           }),
           foregroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) {
-              return isDark ? Colors.grey[600] : Colors.grey[500];
+              return disabledForegroundColor;
             }
             return Colors.white;
           }),
@@ -223,6 +228,20 @@ abstract class AppTheme {
           minimumSize: WidgetStateProperty.all(const Size(double.infinity, 56)),
         ),
       ),
+
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: _primary,
+        foregroundColor: _textPrimaryDark,
+        elevation: 8,
+        extendedPadding: const EdgeInsets.symmetric(
+          horizontal: 24,
+          vertical: 16,
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+      ),
+
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
           foregroundColor: WidgetStateProperty.resolveWith((states) {

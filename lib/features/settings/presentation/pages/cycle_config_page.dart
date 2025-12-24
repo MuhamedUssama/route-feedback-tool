@@ -35,6 +35,8 @@ class _CycleConfigViewState extends State<_CycleConfigView> {
 
   // Controllers for general info
   final _cycleNumberController = TextEditingController();
+  final _assignmentEmailColController = TextEditingController();
+  final _followUpEmailColController = TextEditingController();
   String? _selectedTrack;
 
   // List of group data
@@ -44,6 +46,8 @@ class _CycleConfigViewState extends State<_CycleConfigView> {
   @override
   void dispose() {
     _cycleNumberController.dispose();
+    _assignmentEmailColController.dispose();
+    _followUpEmailColController.dispose();
     for (var group in _groupForms) {
       group.dispose();
     }
@@ -53,6 +57,8 @@ class _CycleConfigViewState extends State<_CycleConfigView> {
   void _loadConfig(CycleConfigEntity? config) {
     if (config != null) {
       _cycleNumberController.text = config.cycleNumber.toString();
+      _assignmentEmailColController.text = config.assignmentEmailColumn;
+      _followUpEmailColController.text = config.followUpEmailColumn;
       _selectedTrack = config.trackName;
 
       setState(() {
@@ -81,6 +87,12 @@ class _CycleConfigViewState extends State<_CycleConfigView> {
       final config = CycleConfigEntity(
         cycleNumber: int.parse(_cycleNumberController.text),
         trackName: _selectedTrack!,
+        assignmentEmailColumn: _assignmentEmailColController.text
+            .trim()
+            .toUpperCase(),
+        followUpEmailColumn: _followUpEmailColController.text
+            .trim()
+            .toUpperCase(),
         groups: groups,
       );
       context.read<CycleConfigCubit>().saveConfig(config);
@@ -139,6 +151,56 @@ class _CycleConfigViewState extends State<_CycleConfigView> {
                           _selectedTrack = val;
                         });
                       },
+                    ),
+
+                    const SizedBox(height: 32),
+                    ConfigSectionHeader(
+                      title: 'Anchor Columns',
+                      icon: Icons.table_chart_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _assignmentEmailColController,
+                            decoration: const InputDecoration(
+                              labelText: 'Assignment Email Column',
+                              hintText: 'e.g. C',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Required';
+                              }
+                              if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
+                                return 'Letters only';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _followUpEmailColController,
+                            decoration: const InputDecoration(
+                              labelText: 'Follow-up Email Column',
+                              hintText: 'e.g. D',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Required';
+                              }
+                              if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
+                                return 'Letters only';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 32),

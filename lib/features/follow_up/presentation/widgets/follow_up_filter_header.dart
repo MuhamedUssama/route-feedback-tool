@@ -90,7 +90,6 @@ class _FollowUpFilterHeaderState extends State<FollowUpFilterHeader> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Assignment Config
                 Expanded(
                   child: Column(
                     children: [
@@ -216,7 +215,35 @@ class _FollowUpFilterHeaderState extends State<FollowUpFilterHeader> {
             ),
 
             // Row 2: Dropdowns (Animated visibility)
-            BlocBuilder<FollowUpActionCubit, FollowUpActionState>(
+            BlocConsumer<FollowUpActionCubit, FollowUpActionState>(
+              listener: (context, state) {
+                state.mapOrNull(
+                  headersLoaded: (data) {
+                    // Reset selection if not found in new list
+                    if (_selectedAssignmentColumn != null) {
+                      final bool exists = data.assignmentHeaders.any(
+                        (sheetColumn) =>
+                            sheetColumn == _selectedAssignmentColumn,
+                      );
+                      if (!exists) {
+                        setState(() {
+                          _selectedAssignmentColumn = null;
+                        });
+                      }
+                    }
+                    if (_selectedStatusColumn != null) {
+                      final exists = data.followUpHeaders.any(
+                        (e) => e == _selectedStatusColumn,
+                      );
+                      if (!exists) {
+                        setState(() {
+                          _selectedStatusColumn = null;
+                        });
+                      }
+                    }
+                  },
+                );
+              },
               builder: (context, state) {
                 List<SheetColumnEntity> assignmentHeaders = [];
                 List<SheetColumnEntity> followUpHeaders = [];
@@ -228,13 +255,19 @@ class _FollowUpFilterHeaderState extends State<FollowUpFilterHeader> {
                     followUpHeaders = fUpHeaders;
                     showDropdowns = true;
                   },
-                  studentsLoaded: (_, _) {
-                    // Logic to keep headers logic visible would require complex state or separate cubit properties.
-                    // For now, based on strict request, we just react to headersLoaded.
-                    // If user re-enters page, they follow flow.
-                  },
+                  studentsLoaded: (_, _) {},
                   orElse: () {},
                 );
+
+                // Safety check: Ensure selected value is in items to prevent crash
+                if (_selectedAssignmentColumn != null &&
+                    !assignmentHeaders.contains(_selectedAssignmentColumn)) {
+                  _selectedAssignmentColumn = null;
+                }
+                if (_selectedStatusColumn != null &&
+                    !followUpHeaders.contains(_selectedStatusColumn)) {
+                  _selectedStatusColumn = null;
+                }
 
                 return AnimatedCrossFade(
                   firstChild: const SizedBox.shrink(),

@@ -12,12 +12,20 @@ class CycleConfigModel {
   @HiveField(1)
   final String trackName;
 
+  @HiveField(3, defaultValue: 'A')
+  final String assignmentEmailColumn;
+
+  @HiveField(4, defaultValue: 'A')
+  final String followUpEmailColumn;
+
   @HiveField(2)
   final List<GroupConfigModel> groups;
 
   CycleConfigModel({
     required this.cycleNumber,
     required this.trackName,
+    required this.assignmentEmailColumn,
+    required this.followUpEmailColumn,
     required this.groups,
   });
 
@@ -25,6 +33,8 @@ class CycleConfigModel {
     return CycleConfigModel(
       cycleNumber: entity.cycleNumber,
       trackName: entity.trackName,
+      assignmentEmailColumn: entity.assignmentEmailColumn,
+      followUpEmailColumn: entity.followUpEmailColumn,
       groups: entity.groups.map((e) => GroupConfigModel.fromEntity(e)).toList(),
     );
   }
@@ -33,6 +43,8 @@ class CycleConfigModel {
     return CycleConfigEntity(
       cycleNumber: cycleNumber,
       trackName: trackName,
+      assignmentEmailColumn: assignmentEmailColumn,
+      followUpEmailColumn: followUpEmailColumn,
       groups: groups.map((e) => e.toEntity()).toList(),
     );
   }
