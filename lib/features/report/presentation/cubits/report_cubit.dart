@@ -66,10 +66,13 @@ class ReportCubit extends Cubit<ReportState> {
 
     await configResult.fold(
       (failure) async {
-        final resetLoading = Set<String>.from(currentState.loadingGroupNames)
+        final freshState = state.mapOrNull(ready: (s) => s);
+        if (freshState == null) return;
+
+        final resetLoading = Set<String>.from(freshState.loadingGroupNames)
           ..remove(group.groupName);
         emit(
-          currentState.copyWith(
+          freshState.copyWith(
             loadingGroupNames: resetLoading,
             errorMessage: failure.message,
           ),
@@ -79,10 +82,13 @@ class ReportCubit extends Cubit<ReportState> {
         if (config == null ||
             config.assignmentsSheetUrl.isEmpty ||
             config.followUpSheetUrl.isEmpty) {
-          final resetLoading = Set<String>.from(currentState.loadingGroupNames)
+          final freshState = state.mapOrNull(ready: (s) => s);
+          if (freshState == null) return;
+
+          final resetLoading = Set<String>.from(freshState.loadingGroupNames)
             ..remove(group.groupName);
           emit(
-            currentState.copyWith(
+            freshState.copyWith(
               loadingGroupNames: resetLoading,
               errorMessage: "Please configure Sheet URLs in Settings first.",
             ),
@@ -98,35 +104,41 @@ class ReportCubit extends Cubit<ReportState> {
           assignmentColumn: assignmentCol,
           followUpColumn: followUpCol,
           assignmentEmailAnchorColumn:
-              currentState.config?.assignmentEmailColumn ?? '',
+              state.mapOrNull(ready: (s) => s.config?.assignmentEmailColumn) ??
+              '',
           followUpEmailAnchorColumn:
-              currentState.config?.followUpEmailColumn ?? '',
+              state.mapOrNull(ready: (s) => s.config?.followUpEmailColumn) ??
+              '',
         );
 
         statsResult.fold(
           (failure) {
-            final resetLoading = Set<String>.from(
-              currentState.loadingGroupNames,
-            )..remove(group.groupName);
+            final freshState = state.mapOrNull(ready: (s) => s);
+            if (freshState == null) return;
+
+            final resetLoading = Set<String>.from(freshState.loadingGroupNames)
+              ..remove(group.groupName);
             emit(
-              currentState.copyWith(
+              freshState.copyWith(
                 loadingGroupNames: resetLoading,
                 errorMessage: failure.message,
               ),
             );
           },
           (stats) {
+            final freshState = state.mapOrNull(ready: (s) => s);
+            if (freshState == null) return;
+
             final newStats = Map<String, Map<String, int>>.from(
-              currentState.groupStats,
+              freshState.groupStats,
             );
             newStats[group.groupName] = stats;
 
-            final resetLoading = Set<String>.from(
-              currentState.loadingGroupNames,
-            )..remove(group.groupName);
+            final resetLoading = Set<String>.from(freshState.loadingGroupNames)
+              ..remove(group.groupName);
 
             emit(
-              currentState.copyWith(
+              freshState.copyWith(
                 groupStats: newStats,
                 loadingGroupNames: resetLoading,
                 errorMessage: null,

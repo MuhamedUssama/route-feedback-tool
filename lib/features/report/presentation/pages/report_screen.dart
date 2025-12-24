@@ -115,13 +115,23 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
 
       state.whenOrNull(
         ready: (config, stats, user, _, _) {
+          if (stats.keys.length != config?.groups.length) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  'Please calculate stats for all groups first',
+                ),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+            return;
+          }
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Processing Report...')));
           _createAndPrintModel(config, stats, user);
         },
       );
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Processing Report...')));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
