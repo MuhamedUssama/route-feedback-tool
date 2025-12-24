@@ -9,12 +9,11 @@ import 'package:intl/intl.dart';
 class PdfGeneratorService {
   static const PdfColor _routeBlue = PdfColor.fromInt(0xFF004182);
   static const PdfColor _lightGrey = PdfColor.fromInt(0xFFF5F5F5);
-  static const PdfColor _textGrey = PdfColor.fromInt(0xFF616161);
+  static const PdfColor _textGrey = PdfColors.grey800;
 
   Future<Uint8List> generateReport(WeeklyReportModel report) async {
     final pdf = pw.Document();
 
-    // 1. Load Assets (Logo & Font)
     final regularFont = await rootBundle.load(
       'assets/fonts/OpenSans-Regular.ttf',
     );
@@ -24,7 +23,6 @@ class PdfGeneratorService {
       'assets/images/route_logo.png',
     )).buffer.asUint8List();
 
-    // 2. Define Theme with the Custom Font 🎨
     final theme = pw.ThemeData.withFont(
       base: pw.Font.ttf(regularFont),
       bold: pw.Font.ttf(boldFont),
@@ -32,10 +30,9 @@ class PdfGeneratorService {
 
     pdf.addPage(
       pw.MultiPage(
-        theme: theme, // Apply font theme
+        theme: theme,
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
-        // footer logic handles page numbering
         footer: (context) => _buildFooter(context),
         build: (pw.Context context) {
           return [
@@ -45,11 +42,9 @@ class PdfGeneratorService {
             _buildSummarySection(report),
             pw.SizedBox(height: 20),
 
-            // Fix: Title separated from Grid to allow Grid to break pages
             _buildSectionTitle('Groups Performance'),
             pw.SizedBox(height: 10),
 
-            // CHANGED: Use Tables instead of Grid
             ..._buildGroupsTables(report),
             pw.SizedBox(height: 20),
 
@@ -69,7 +64,6 @@ class PdfGeneratorService {
     return pdf.save();
   }
 
-  // ... _buildHeader (Same as before) ...
   pw.Widget _buildHeader(WeeklyReportModel report, Uint8List pngLogo) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -110,7 +104,6 @@ class PdfGeneratorService {
     );
   }
 
-  // ... _buildSummarySection (Added SizedConstraint to Chart Stack) ...
   pw.Widget _buildSummarySection(WeeklyReportModel report) {
     int totalSubmitted = 0;
     int totalMissing = 0;
@@ -144,20 +137,25 @@ class PdfGeneratorService {
                   ),
                 ),
                 pw.SizedBox(height: 8),
-                _buildStatRow('Total Students', '$total'),
-                _buildStatRow(
+                _buildLegendItem('Total Students', '$total', PdfColors.black),
+                pw.SizedBox(height: 4),
+                _buildLegendItem(
                   'Submitted',
                   '$totalSubmitted',
-                  color: PdfColors.green700,
+                  PdfColors.green700,
                 ),
-                _buildStatRow(
+                pw.SizedBox(height: 4),
+                _buildLegendItem(
                   'Missing',
                   '$totalMissing',
-                  color: PdfColors.orange700,
+                  PdfColors.orange700,
                 ),
               ],
             ),
           ),
+          pw.SizedBox(width: 16),
+          pw.Container(width: 1, height: 60, color: PdfColors.grey300),
+          pw.SizedBox(width: 16),
           pw.Expanded(
             flex: 1,
             child: pw.Column(
@@ -167,7 +165,6 @@ class PdfGeneratorService {
                   style: pw.TextStyle(fontSize: 10, color: _textGrey),
                 ),
                 pw.SizedBox(height: 5),
-                // FIX: Ensure Stack has a defined size context
                 pw.SizedBox(
                   width: 60,
                   height: 60,
@@ -178,7 +175,7 @@ class PdfGeneratorService {
                         value: total > 0 ? totalSubmitted / total : 0,
                         color: _routeBlue,
                         backgroundColor: PdfColors.orange200,
-                        strokeWidth: 6,
+                        strokeWidth: 7,
                       ),
                       pw.Text(
                         '$submittedPct%',
@@ -198,24 +195,30 @@ class PdfGeneratorService {
     );
   }
 
-  // ... _buildStatRow, _buildWorkshopSection (Same as before) ...
-  pw.Widget _buildStatRow(String label, String value, {PdfColor? color}) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 2),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        children: [
-          pw.Text(label, style: const pw.TextStyle(fontSize: 10)),
-          pw.Text(
-            value,
-            style: pw.TextStyle(
-              fontSize: 10,
-              fontWeight: pw.FontWeight.bold,
-              color: color,
-            ),
+  pw.Widget _buildLegendItem(String label, String value, PdfColor color) {
+    return pw.Row(
+      children: [
+        pw.Container(
+          width: 8,
+          height: 8,
+          decoration: pw.BoxDecoration(color: color, shape: pw.BoxShape.circle),
+        ),
+        pw.SizedBox(width: 8),
+        pw.Expanded(
+          child: pw.Text(
+            label,
+            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey800),
           ),
-        ],
-      ),
+        ),
+        pw.Text(
+          value,
+          style: pw.TextStyle(
+            fontWeight: pw.FontWeight.bold,
+            fontSize: 10,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 
@@ -241,14 +244,13 @@ class PdfGeneratorService {
           cellPadding: const pw.EdgeInsets.all(5),
           headers: ['Topic', 'Date'],
           data: [
-            [w.topic, DateFormat('dd/MM/yyyy').format(w.date)],
+            [w.topic, DateFormat('MMMM dd, yyyy').format(w.date)],
           ],
         ),
       ],
     );
   }
 
-  // 🟢 NEW: Build a list of tables (one per group)
   List<pw.Widget> _buildGroupsTables(WeeklyReportModel report) {
     return report.groups.map((group) {
       return pw.Padding(
@@ -304,7 +306,7 @@ class PdfGeneratorService {
           group.missingCount.toString(),
           group.feedbackDone ? 'Done' : 'Pending',
           group.deadline != null
-              ? DateFormat('MMMM dd, yyyy').format(group.deadline!)
+              ? DateFormat('MMM dd, yyyy').format(group.deadline!)
               : '-',
         ],
       ],
@@ -342,11 +344,8 @@ class PdfGeneratorService {
   String _formatTime(TimeOfDay? time) {
     if (time == null) return '-';
 
-    // 1. Create a dummy DateTime with the TimeOfDay values
     final now = DateTime.now();
     final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
-
-    // 2. Use intl to format it nicely (e.g., "10:30 AM")
 
     return DateFormat('h:mm a').format(dt);
   }
