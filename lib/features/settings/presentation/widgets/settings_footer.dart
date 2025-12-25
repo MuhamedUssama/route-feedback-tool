@@ -43,16 +43,12 @@ class SettingsFooter extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.code_rounded,
-                  size: 16,
-                  color: Theme.of(context).disabledColor,
-                ),
+                Icon(Icons.code_rounded, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 8),
                 Text(
                   'Route Mentor Assistant v1.0.0',
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: Theme.of(context).disabledColor,
+                    color: Colors.grey[600],
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.5,

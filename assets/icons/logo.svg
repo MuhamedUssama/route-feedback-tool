@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g filter="url(#filter0_d_soft)">
+        <path d="M150 320L256 390L362 320V220L256 150L150 220V320Z" fill="#00555E" />
+        <path d="M150 320L256 250L362 320" stroke="#00474F" stroke-width="4" />
+
+
+        <path d="M256 80L340 190H285V330H227V190H172L256 80Z" fill="#006D77" />
+
+        <path d="M256 80L310 150H202L256 80Z" fill="#00A3B3" fill-opacity="0.4" />
+        <path d="M256 190V330" stroke="#008C99" stroke-width="6" stroke-linecap="round" />
+
+    </g>
+
+    <defs>
+        <filter id="filter0_d_soft" x="130" y="70" width="252" height="340"
+            filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix" />
+            <feColorMatrix in="SourceAlpha" type="matrix"
+                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feOffset dy="8" />
+            <feGaussianBlur stdDeviation="6" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0.2 0 0 0 0 0.3 0 0 0 0.25 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
+        </filter>
+    </defs>
+</svg>
