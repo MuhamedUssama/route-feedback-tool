@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     try {
       await Future.wait([
-        Future.delayed(const Duration(seconds: 20)),
+        Future.delayed(const Duration(seconds: 3)),
 
         _checkForUpdates(),
       ]);

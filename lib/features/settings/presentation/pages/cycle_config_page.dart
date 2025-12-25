@@ -7,6 +7,7 @@ import 'package:mentor_assistant/features/settings/domain/entities/cycle_config_
 import 'package:mentor_assistant/features/settings/domain/entities/group_config_entity.dart';
 import 'package:mentor_assistant/features/settings/presentation/cubits/cycle_config/cycle_config_cubit.dart';
 import 'package:mentor_assistant/features/settings/presentation/cubits/cycle_config/cycle_config_state.dart';
+import 'package:mentor_assistant/features/settings/presentation/widgets/config_anchor_columns.dart';
 import 'package:mentor_assistant/features/settings/presentation/widgets/config_general_info_card.dart';
 import 'package:mentor_assistant/features/settings/presentation/widgets/config_group_card.dart';
 import 'package:mentor_assistant/features/settings/presentation/widgets/config_section_header.dart';
@@ -159,48 +160,10 @@ class _CycleConfigViewState extends State<_CycleConfigView> {
                       icon: Icons.table_chart_outlined,
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _assignmentEmailColController,
-                            decoration: const InputDecoration(
-                              labelText: 'Assignment Email Column',
-                              hintText: 'e.g. C',
-                              border: OutlineInputBorder(),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Required';
-                              }
-                              if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
-                                return 'Letters only';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _followUpEmailColController,
-                            decoration: const InputDecoration(
-                              labelText: 'Follow-up Email Column',
-                              hintText: 'e.g. D',
-                              border: OutlineInputBorder(),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Required';
-                              }
-                              if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
-                                return 'Letters only';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
+                    ConfigAnchorColumns(
+                      assignmentEmailColController:
+                          _assignmentEmailColController,
+                      followUpEmailColController: _followUpEmailColController,
                     ),
 
                     const SizedBox(height: 32),

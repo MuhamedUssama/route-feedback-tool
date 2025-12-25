@@ -123,11 +123,11 @@ abstract class AppTheme {
         fillColor: isDark ? _cardDark : Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[700]!),
+          borderSide: BorderSide(color: Colors.grey[500]!, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[700]!),
+          borderSide: BorderSide(color: Colors.grey[500]!, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -143,7 +143,7 @@ abstract class AppTheme {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[700]!),
+          borderSide: BorderSide(color: Colors.grey[500]!, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -260,8 +260,10 @@ abstract class AppTheme {
       // Cards
       cardTheme: CardThemeData(
         color: isDark ? _cardDark : Colors.white,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.05),
+        elevation: isDark ? 2 : 6,
+        shadowColor: isDark
+            ? Colors.black.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(0),
       ),
