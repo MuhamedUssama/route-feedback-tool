@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:mentor_assistant/core/widgets/test_theme_page.dart';
 import 'package:mentor_assistant/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:mentor_assistant/features/auth/presentation/pages/login_page.dart';
 import 'package:mentor_assistant/features/main_layout/cubit/navigation_cubit.dart';
@@ -41,7 +40,7 @@ class AppRouter {
       case cycleConfigRoute:
         return MaterialPageRoute(builder: (_) => const CycleConfigPage());
       default:
-        return MaterialPageRoute(builder: (context) => const TestThemePage());
+        return MaterialPageRoute(builder: (context) => const Scaffold());
     }
   }
 }

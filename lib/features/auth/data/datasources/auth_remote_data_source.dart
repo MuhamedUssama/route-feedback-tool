@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/errors/auth_error_type.dart';
@@ -19,15 +20,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> loginWithGoogle() async {
     try {
-      final client = await _googleAuthClient.getAuthenticatedClient().timeout(
-        const Duration(seconds: 100),
-        onTimeout: () {
-          throw const GoogleAuthException(
-            'Login timed out or was cancelled',
-            AuthErrorType.cancelled,
+      final (client, account) = await _googleAuthClient
+          .getAuthenticatedClientAndAccount()
+          .timeout(
+            const Duration(seconds: 100),
+            onTimeout: () {
+              throw const GoogleAuthException(
+                'Login timed out or was cancelled',
+                AuthErrorType.cancelled,
+              );
+            },
           );
-        },
-      );
 
       if (client == null) {
         throw const GoogleAuthException(
@@ -36,31 +39,46 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         );
       }
 
-      final response = await client.get(
-        Uri.parse('https://www.googleapis.com/oauth2/v3/userinfo'),
-      );
+      if (Platform.isWindows) {
+        final response = await client.get(
+          Uri.parse('https://www.googleapis.com/oauth2/v3/userinfo'),
+        );
 
-      if (response.statusCode == 200) {
-        // Log Raw JSON for debugging
-        if (kDebugMode) {
-          print("🔍 Google User Info Raw JSON: ${response.body}");
+        if (response.statusCode == 200) {
+          if (kDebugMode) {
+            print("🔍 Google User Info Raw JSON: ${response.body}");
+          }
+          final json = jsonDecode(response.body) as Map<String, dynamic>;
+
+          return UserModel(
+            id: json['sub'] as String,
+            email: json['email'] as String,
+            displayName:
+                json['name'] as String? ??
+                (json['email'] as String).split('@')[0],
+            photoUrl: json['picture'] as String?,
+            accessToken: '',
+          );
+        } else {
+          throw ServerException(
+            'Failed to fetch user info from Google',
+            statusCode: response.statusCode,
+          );
+        }
+      } else {
+        if (account == null) {
+          throw const GoogleAuthException(
+            'No account found after sign in',
+            AuthErrorType.unknown,
+          );
         }
 
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-
         return UserModel(
-          id: json['sub'] as String,
-          email: json['email'] as String,
-          displayName:
-              json['name'] as String? ??
-              (json['email'] as String).split('@')[0],
-          photoUrl: json['picture'] as String?,
+          id: account.id,
+          email: account.email,
+          displayName: account.displayName ?? account.email.split('@')[0],
+          photoUrl: account.photoUrl,
           accessToken: '',
-        );
-      } else {
-        throw ServerException(
-          'Failed to fetch user info from Google',
-          statusCode: response.statusCode,
         );
       }
     } catch (e) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -20,89 +21,103 @@ class GoogleAuthClient {
     GmailApi.gmailSendScope,
   ];
 
-  // Cache for the authenticated client
+  // Cache for the authenticated client and account
   http.Client? _cachedClient;
-  // Completer to handle concurrent login requests (Race Condition Prevention)
-  Completer<http.Client?>? _loginCompleter;
+  GoogleSignInAccount? _cachedAccount;
 
-  // ================== Main Entry Point ==================
+  // Completer to handle concurrent login requests (Race Condition Prevention)
+  Completer<(http.Client?, GoogleSignInAccount?)>? _loginCompleter;
+
+  // ================== Main Entry Point (for APIs) ==================
   Future<http.Client?> getAuthenticatedClient() async {
-    // 1. Return cached client if available
     if (_cachedClient != null) {
       return _cachedClient;
     }
 
-    // 2. If a login is already in progress, wait for it
     if (_loginCompleter != null) {
-      return _loginCompleter!.future;
+      final (client, _) = await _loginCompleter!.future;
+      return client;
     }
 
-    // 3. Start new login flow
-    _loginCompleter = Completer<http.Client?>();
+    _loginCompleter = Completer<(http.Client?, GoogleSignInAccount?)>();
 
     try {
       http.Client? client;
+      GoogleSignInAccount? account;
+
       if (Platform.isMacOS) {
-        client = await _signInMacOS();
+        final (c, a) = await _signInMacOS();
+        client = c;
+        account = a;
       } else if (Platform.isWindows) {
         client = await _signInWindows();
+        account = null;
       } else {
         throw UnimplementedError("Platform not supported");
       }
 
-      if (client != null) {
-        _cachedClient = client;
-        _loginCompleter!.complete(client);
-      } else {
-        _loginCompleter!.complete(null);
-      }
+      _cachedClient = client;
+      _cachedAccount = account;
+
+      _loginCompleter!.complete((client, account));
     } catch (e) {
       _loginCompleter!.completeError(e);
-      _loginCompleter = null; // Reset on error
       rethrow;
     } finally {
-      _loginCompleter = null; // Reset after completion
+      _loginCompleter = null;
     }
 
     return _cachedClient;
   }
 
+  // ================== New Entry Point (for getting user info) ==================
+  Future<(http.Client?, GoogleSignInAccount?)>
+  getAuthenticatedClientAndAccount() async {
+    await getAuthenticatedClient(); // Ensures login happens if needed
+
+    return (_cachedClient, _cachedAccount);
+  }
+
+  // ================== Sign Out ==================
   Future<void> signOut() async {
     try {
-      // 1. MacOS Native Sign Out
       if (Platform.isMacOS) {
         await GoogleSignIn.instance.signOut();
         if (kDebugMode) print("MacOS User Signed Out");
       }
 
-      // 2. Windows & General Cleanup
-      if (_cachedClient != null) {
-        _cachedClient!.close();
-      }
+      _cachedClient?.close();
     } catch (e) {
       if (kDebugMode) print("SignOut Error: $e");
     } finally {
-      // 3. Global Reset
       _cachedClient = null;
+      _cachedAccount = null;
       _loginCompleter = null;
-
       if (kDebugMode) print("Local Session Cleared");
     }
   }
 
-  // ================== macOS Logic (Native v7) ==================
-  Future<http.Client?> _signInMacOS() async {
+  // ================== macOS Logic (Native v7+) ==================
+  Future<(http.Client, GoogleSignInAccount)> _signInMacOS() async {
     try {
       final googleSignIn = GoogleSignIn.instance;
 
       await googleSignIn.initialize(clientId: dotenv.env['AppleClientId']);
 
-      final account = await googleSignIn.authenticate();
+      final account = await googleSignIn.authenticate(scopeHint: _scopes);
 
-      return _MacGoogleHttpClient(account);
+      // if (account == null) {
+      //   throw Exception('Sign in cancelled');
+      // }
+
+      if (kDebugMode) {
+        print("✅ Sign In Success: ${account.email}");
+      }
+
+      return (_MacGoogleHttpClient(account), account);
     } catch (e) {
       if (kDebugMode) print("MacOS Sign In Error: $e");
-      return null;
+      rethrow;
     }
   }
 
@@ -137,7 +152,6 @@ class _MacGoogleHttpClient extends http.BaseClient {
   final http.Client _inner = http.Client();
 
   static const List<String> _scopes = [
-    'email',
     SheetsApi.spreadsheetsScope,
     GmailApi.gmailSendScope,
   ];
@@ -151,6 +165,8 @@ class _MacGoogleHttpClient extends http.BaseClient {
 
     if (authHeaders != null) {
       request.headers.addAll(authHeaders);
+    } else {
+      throw Exception('Failed to get authorization headers');
     }
 
     return _inner.send(request);
