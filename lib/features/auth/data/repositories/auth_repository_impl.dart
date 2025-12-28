@@ -1,13 +1,13 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
+import '../../../../core/errors/auth_error_type.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_data_source.dart';
 import '../datasources/auth_remote_data_source.dart';
-import '../models/user_model.dart';
 
 @LazySingleton(as: AuthRepository)
 class AuthRepositoryImpl implements AuthRepository {
@@ -19,9 +19,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, UserEntity>> loginWithGoogle() async {
     try {
-      final UserModel userModel = await _remoteDataSource.loginWithGoogle();
-      await _localDataSource.cacheUser(userModel);
-      return Right(userModel);
+      final (user, credentials) = await _remoteDataSource.loginWithGoogle();
+      await _localDataSource.cacheUser(user);
+      if (credentials != null) {
+        await _localDataSource.cacheCredentials(credentials);
+      }
+      return Right(user);
     } on GoogleAuthException catch (e) {
       return Left(Failure.auth(e.message, e.type));
     } on ServerException catch (e) {
@@ -60,6 +63,38 @@ class AuthRepositoryImpl implements AuthRepository {
     } on CacheException catch (e) {
       return Left(Failure.cache(e.message));
     } catch (e) {
+      return Left(Failure.unexpected(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> checkAutoLogin() async {
+    try {
+      final cachedUser = await _localDataSource.getCachedUser();
+      if (cachedUser == null) {
+        return const Left(
+          Failure.auth('No cached user', AuthErrorType.userNotAuthenticated),
+        );
+      }
+
+      final credentials = await _localDataSource.getCachedCredentials();
+
+      final user = await _remoteDataSource.loginSilently(credentials);
+
+      if (user != null) {
+        await _localDataSource.cacheUser(user);
+        return Right(user);
+      } else {
+        await _localDataSource.clearUserCache();
+        return const Left(
+          Failure.auth(
+            'Silent login failed',
+            AuthErrorType.userNotAuthenticated,
+          ),
+        );
+      }
+    } catch (e) {
+      await _localDataSource.clearUserCache();
       return Left(Failure.unexpected(e.toString()));
     }
   }

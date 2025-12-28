@@ -78,6 +78,7 @@ import '../../features/settings/presentation/cubits/settings/settings_cubit.dart
     as _i536;
 import '../../features/settings/presentation/cubits/theme/theme_cubit.dart'
     as _i34;
+import '../../features/splash/presentation/cubit/splash_cubit.dart' as _i125;
 import '../network/google_auth_client.dart' as _i527;
 import '../services/shared_prefs_service.dart' as _i816;
 import 'register_module.dart' as _i291;
@@ -205,6 +206,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i880.UpdateStudentStatusUseCase>(),
         gh<_i1072.BatchUpdateStudentStatusUseCase>(),
       ),
+    );
+    gh.factory<_i125.SplashCubit>(
+      () => _i125.SplashCubit(gh<_i787.AuthRepository>()),
     );
     gh.factory<_i117.AuthCubit>(
       () => _i117.AuthCubit(gh<_i57.LoginWithGoogleUseCase>()),

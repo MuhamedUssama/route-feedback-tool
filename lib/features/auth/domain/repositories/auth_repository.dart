@@ -6,4 +6,5 @@ abstract interface class AuthRepository {
   Future<Either<Failure, UserEntity>> loginWithGoogle();
   Future<Either<Failure, void>> logout();
   Future<Either<Failure, UserEntity?>> getCachedUser();
+  Future<Either<Failure, UserEntity>> checkAutoLogin();
 }
