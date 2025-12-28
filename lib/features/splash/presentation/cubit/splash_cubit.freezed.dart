@@ -12,11 +12,17 @@ part of 'splash_cubit.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$SplashState {
+mixin _$SplashState implements DiagnosticableTreeMixin {
 
 
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SplashState'))
+    ;
+}
 
 @override
 bool operator ==(Object other) {
@@ -28,7 +34,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'SplashState()';
 }
 
@@ -131,11 +137,11 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( UserEntity user)?  authenticated,TResult Function()?  unauthenticated,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function( String message,  double progress)?  loading,TResult Function( UserEntity user)?  authenticated,TResult Function()?  unauthenticated,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case SplashInitial() when initial != null:
 return initial();case SplashLoading() when loading != null:
-return loading();case AuthAuthenticated() when authenticated != null:
+return loading(_that.message,_that.progress);case AuthAuthenticated() when authenticated != null:
 return authenticated(_that.user);case AuthUnauthenticated() when unauthenticated != null:
 return unauthenticated();case SplashError() when error != null:
 return error(_that.message);case _:
@@ -156,11 +162,11 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( UserEntity user)  authenticated,required TResult Function()  unauthenticated,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function( String message,  double progress)  loading,required TResult Function( UserEntity user)  authenticated,required TResult Function()  unauthenticated,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case SplashInitial():
 return initial();case SplashLoading():
-return loading();case AuthAuthenticated():
+return loading(_that.message,_that.progress);case AuthAuthenticated():
 return authenticated(_that.user);case AuthUnauthenticated():
 return unauthenticated();case SplashError():
 return error(_that.message);case _:
@@ -180,11 +186,11 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( UserEntity user)?  authenticated,TResult? Function()?  unauthenticated,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function( String message,  double progress)?  loading,TResult? Function( UserEntity user)?  authenticated,TResult? Function()?  unauthenticated,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case SplashInitial() when initial != null:
 return initial();case SplashLoading() when loading != null:
-return loading();case AuthAuthenticated() when authenticated != null:
+return loading(_that.message,_that.progress);case AuthAuthenticated() when authenticated != null:
 return authenticated(_that.user);case AuthUnauthenticated() when unauthenticated != null:
 return unauthenticated();case SplashError() when error != null:
 return error(_that.message);case _:
@@ -198,7 +204,7 @@ return error(_that.message);case _:
 /// @nodoc
 
 
-class SplashInitial implements SplashState {
+class SplashInitial with DiagnosticableTreeMixin implements SplashState {
   const SplashInitial();
   
 
@@ -206,6 +212,12 @@ class SplashInitial implements SplashState {
 
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SplashState.initial'))
+    ;
+}
 
 @override
 bool operator ==(Object other) {
@@ -217,7 +229,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'SplashState.initial()';
 }
 
@@ -230,39 +242,81 @@ String toString() {
 /// @nodoc
 
 
-class SplashLoading implements SplashState {
-  const SplashLoading();
+class SplashLoading with DiagnosticableTreeMixin implements SplashState {
+  const SplashLoading({this.message = 'Initializing...', this.progress = 0.0});
   
 
+@JsonKey() final  String message;
+@JsonKey() final  double progress;
+
+/// Create a copy of SplashState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SplashLoadingCopyWith<SplashLoading> get copyWith => _$SplashLoadingCopyWithImpl<SplashLoading>(this, _$identity);
 
 
-
-
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SplashState.loading'))
+    ..add(DiagnosticsProperty('message', message))..add(DiagnosticsProperty('progress', progress));
+}
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SplashLoading);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SplashLoading&&(identical(other.message, message) || other.message == message)&&(identical(other.progress, progress) || other.progress == progress));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,message,progress);
 
 @override
-String toString() {
-  return 'SplashState.loading()';
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'SplashState.loading(message: $message, progress: $progress)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $SplashLoadingCopyWith<$Res> implements $SplashStateCopyWith<$Res> {
+  factory $SplashLoadingCopyWith(SplashLoading value, $Res Function(SplashLoading) _then) = _$SplashLoadingCopyWithImpl;
+@useResult
+$Res call({
+ String message, double progress
+});
 
 
+
+
+}
+/// @nodoc
+class _$SplashLoadingCopyWithImpl<$Res>
+    implements $SplashLoadingCopyWith<$Res> {
+  _$SplashLoadingCopyWithImpl(this._self, this._then);
+
+  final SplashLoading _self;
+  final $Res Function(SplashLoading) _then;
+
+/// Create a copy of SplashState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? progress = null,}) {
+  return _then(SplashLoading(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,progress: null == progress ? _self.progress : progress // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+
+}
 
 /// @nodoc
 
 
-class AuthAuthenticated implements SplashState {
+class AuthAuthenticated with DiagnosticableTreeMixin implements SplashState {
   const AuthAuthenticated(this.user);
   
 
@@ -275,6 +329,12 @@ class AuthAuthenticated implements SplashState {
 $AuthAuthenticatedCopyWith<AuthAuthenticated> get copyWith => _$AuthAuthenticatedCopyWithImpl<AuthAuthenticated>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SplashState.authenticated'))
+    ..add(DiagnosticsProperty('user', user));
+}
 
 @override
 bool operator ==(Object other) {
@@ -286,7 +346,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,user);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'SplashState.authenticated(user: $user)';
 }
 
@@ -328,7 +388,7 @@ as UserEntity,
 /// @nodoc
 
 
-class AuthUnauthenticated implements SplashState {
+class AuthUnauthenticated with DiagnosticableTreeMixin implements SplashState {
   const AuthUnauthenticated();
   
 
@@ -336,6 +396,12 @@ class AuthUnauthenticated implements SplashState {
 
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SplashState.unauthenticated'))
+    ;
+}
 
 @override
 bool operator ==(Object other) {
@@ -347,7 +413,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'SplashState.unauthenticated()';
 }
 
@@ -360,7 +426,7 @@ String toString() {
 /// @nodoc
 
 
-class SplashError implements SplashState {
+class SplashError with DiagnosticableTreeMixin implements SplashState {
   const SplashError(this.message);
   
 
@@ -373,6 +439,12 @@ class SplashError implements SplashState {
 $SplashErrorCopyWith<SplashError> get copyWith => _$SplashErrorCopyWithImpl<SplashError>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SplashState.error'))
+    ..add(DiagnosticsProperty('message', message));
+}
 
 @override
 bool operator ==(Object other) {
@@ -384,7 +456,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,message);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'SplashState.error(message: $message)';
 }
 
