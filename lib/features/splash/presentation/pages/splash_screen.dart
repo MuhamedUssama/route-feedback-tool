@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:mentor_assistant/core/router/app_router.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubit/splash_cubit.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,10 +20,12 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   String _statusMessage = 'Initializing System...';
   double _loadProgress = 0.0;
+  bool _isReady = false;
 
   @override
   void initState() {
     super.initState();
+    context.read<SplashCubit>().checkAutoLogin();
     _initializeApp();
   }
 
@@ -30,14 +35,16 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       await Future.wait([
         Future.delayed(const Duration(seconds: 3)),
-
         _checkForUpdates(),
       ]);
     } catch (e) {
       debugPrint('Error during initialization: $e');
     } finally {
       if (mounted) {
-        _navigateToLogin();
+        setState(() {
+          _isReady = true;
+        });
+        _handleNavigation(context.read<SplashCubit>().state);
       }
     }
   }
@@ -48,9 +55,11 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     try {
-      setState(() {
-        _statusMessage = 'Checking for updates...';
-      });
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'Checking for updates...';
+        });
+      }
 
       const feedUrl =
           'https://muhamedussama.github.io/mentor-assistant-web/appcast.xml';
@@ -77,12 +86,33 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
-  void _navigateToLogin() {
-    Navigator.of(context).pushReplacementNamed(AppRouter.loginRoute);
+  void _handleNavigation(SplashState state) {
+    if (!_isReady) return;
+
+    state.whenOrNull(
+      authenticated: (user) {
+        Navigator.of(context).pushReplacementNamed(AppRouter.mainLayoutRoute);
+      },
+      unauthenticated: () {
+        Navigator.of(context).pushReplacementNamed(AppRouter.loginRoute);
+      },
+      error: (message) {
+        Navigator.of(context).pushReplacementNamed(AppRouter.loginRoute);
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    return BlocListener<SplashCubit, SplashState>(
+      listener: (context, state) {
+        _handleNavigation(state);
+      },
+      child: _buildScaffold(context),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final primaryColor = colorScheme.primary;

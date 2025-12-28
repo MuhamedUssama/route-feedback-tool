@@ -9,6 +9,7 @@ import 'package:googleapis/sheets/v4.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
+import 'package:mentor_assistant/features/auth/data/models/credentials_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 @lazySingleton
@@ -106,10 +107,6 @@ class GoogleAuthClient {
 
       final account = await googleSignIn.authenticate(scopeHint: _scopes);
 
-      // if (account == null) {
-      //   throw Exception('Sign in cancelled');
-      // }
-
       if (kDebugMode) {
         print("✅ Sign In Success: ${account.email}");
       }
@@ -142,6 +139,59 @@ class GoogleAuthClient {
     } catch (e) {
       if (kDebugMode) print("Windows Sign In Error: $e");
       return null;
+    }
+  }
+
+  // ================== Silent Sign In (Refresh Token) ==================
+  Future<(http.Client?, GoogleSignInAccount?)> signInSilently(
+    CredentialsModel? credentialsModel,
+  ) async {
+    if (_cachedClient != null) {
+      return (_cachedClient, _cachedAccount);
+    }
+
+    try {
+      http.Client? client;
+      GoogleSignInAccount? account;
+
+      if (Platform.isMacOS) {
+        // macOS uses GoogleSignIn for silent login
+        final googleSignIn = GoogleSignIn.instance;
+        // Ensure initialized with client ID
+        await googleSignIn.initialize(clientId: dotenv.env['AppleClientId']);
+
+        account = await googleSignIn.attemptLightweightAuthentication();
+        if (account != null) {
+          client = _MacGoogleHttpClient(account);
+        }
+      } else if (Platform.isWindows && credentialsModel != null) {
+        // Windows uses stored credentials to recreate the client
+        final clientId = ClientId(
+          dotenv.env['WindowsClientId']!,
+          dotenv.env['WindowsClientSecret'],
+        );
+
+        final credentials = credentialsModel.toAccessCredentials();
+
+        // Check if credentials are valid or can be refreshed
+        if (credentials.accessToken.hasExpired &&
+            credentials.refreshToken == null) {
+          throw Exception("Token expired and no refresh token available");
+        }
+
+        client = autoRefreshingClient(clientId, credentials, http.Client());
+      }
+
+      if (client != null) {
+        _cachedClient = client;
+        _cachedAccount = account;
+        if (kDebugMode) print("✅ Silent Sign In Success");
+      }
+
+      return (client, account);
+    } catch (e) {
+      if (kDebugMode) print("Silent Sign In Error: $e");
+      return (null, null);
     }
   }
 }
