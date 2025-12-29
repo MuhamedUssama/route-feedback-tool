@@ -12,6 +12,7 @@ import '../datasources/follow_up_local_data_source.dart';
 import '../datasources/gmail_remote_data_source.dart';
 import '../datasources/sheets_remote_data_source.dart';
 import '../models/follow_up_config_model.dart';
+import 'package:html_unescape/html_unescape.dart';
 
 @LazySingleton(as: FollowUpRepository)
 class FollowUpRepositoryImpl implements FollowUpRepository {
@@ -24,6 +25,18 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
     this._transportGmail,
     this._localDataSource,
   );
+
+  @override
+  Future<Either<Failure, String>> getCurrentUserEmail() async {
+    try {
+      final email = await _transportGmail.getCurrentUserEmail();
+      return Right(email);
+    } on GoogleAuthException catch (e) {
+      return Left(AuthFailure(e.message, e.type));
+    } catch (e) {
+      return Left(Failure.unexpected(e.toString()));
+    }
+  }
 
   @override
   Future<Either<Failure, List<SheetColumnEntity>>> getSheetHeaders(
@@ -80,16 +93,16 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
   }
 
   @override
-  Future<Either<Failure, void>> sendFollowUpEmail({
+  Future<Either<Failure, String>> sendFollowUpEmail({
     required StudentEntity student,
     required String assignmentName,
   }) async {
     try {
-      await _transportGmail.sendFollowUpEmail(
+      final threadId = await _transportGmail.sendFollowUpEmail(
         student: student,
         assignmentName: assignmentName,
       );
-      return const Right(null);
+      return Right(threadId);
     } on ServerException catch (e) {
       return Left(Failure.server(e.message));
     } catch (e) {
@@ -104,6 +117,8 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
     required int statusColumnIndex,
     required FollowUpAction action,
     int? sheetId,
+    String? formula,
+    String? note,
   }) async {
     try {
       await _remoteDataSource.updateStudentStatus(
@@ -112,6 +127,8 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
         statusColumnIndex: statusColumnIndex,
         action: action,
         sheetId: sheetId,
+        formula: formula,
+        note: note,
       );
       return const Right(null);
     } on GoogleAuthException catch (e) {
@@ -133,6 +150,130 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
         spreadsheetId: spreadsheetId,
         updates: updates,
       );
+      return const Right(null);
+    } on GoogleAuthException catch (e) {
+      return Left(AuthFailure(e.message, e.type));
+    } on SheetException catch (e) {
+      return Left(Failure.sheet(e.message));
+    } catch (e) {
+      return Left(Failure.unexpected(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> checkStudentReplies({
+    required String spreadsheetId,
+    required int? sheetId,
+    required int statusColumnIndex,
+    required int followUpHeaderRowIndex,
+  }) async {
+    try {
+      // 1. Fetch formulas from the Sheet
+      // We assume data starts after the header row.
+      // Actually, we should start checking from followUpHeaderRowIndex + 1
+      final int actualStartRow = followUpHeaderRowIndex + 1;
+
+      // We'll fetch a reasonable amount of rows, e.g., until row 1000 or implement chunking later.
+      // For now let's fetch until 500 rows to be safe or just fetch column data.
+      // RemoteDataSource handles empty checking.
+      const int endRow = 500;
+
+      final formulas = await _remoteDataSource.getColumnFormulas(
+        spreadsheetId: spreadsheetId,
+        sheetId: sheetId,
+        columnIndex: statusColumnIndex,
+        startRow: actualStartRow,
+        endRow: endRow,
+      );
+
+      final updates = <StudentStatusUpdateModel>[];
+      final threadIdRegex = RegExp(r'#inbox/([a-z0-9]+)', caseSensitive: false);
+
+      for (int i = 0; i < formulas.length; i++) {
+        final formula = formulas[i];
+        // Check if cell is "Email Sent" via Hyperlink
+        if (formula.contains('=HYPERLINK') && formula.contains('Email Sent')) {
+          final match = threadIdRegex.firstMatch(formula);
+          if (match != null) {
+            final threadId = match.group(1);
+            if (threadId != null) {
+              // 2. Fetch Thread from Gmail
+              try {
+                final thread = await _transportGmail.getThread(threadId);
+                final messages = thread.messages;
+
+                if (messages != null && messages.isNotEmpty) {
+                  final lastMessage = messages.last;
+
+                  // CHECK SENDER LOGIC: Rely on LABEL IDS
+                  // If 'SENT' is present, I sent the last message -> NO ANSWER.
+                  // If 'SENT' is NOT present, Student sent the last message -> REPLY FOUND.
+
+                  bool isLastMessageSentByMe = false;
+                  if (lastMessage.labelIds != null &&
+                      lastMessage.labelIds!.contains('SENT')) {
+                    isLastMessageSentByMe = true;
+                  }
+
+                  if (!isLastMessageSentByMe) {
+                    // --- REPLY FOUND ---
+                    var snippet = lastMessage.snippet ?? "Reply Received";
+
+                    // Decode HTML entities (e.g., &#39; -> ')
+                    final unescape = HtmlUnescape();
+                    snippet = unescape.convert(snippet);
+
+                    // New Formula: =HYPERLINK("link", "📩 Reply Received")
+                    // We preserve the link but update the label to fixed text.
+                    // The snippet goes into the NOTE.
+                    final newFormula = formula.replaceFirst(
+                      '"Email Sent"',
+                      '"📩 Reply Received"',
+                    );
+                    // Also guard against if it was already "Reply: ..."
+                    // But assume we are transitioning from "Email Sent".
+
+                    // Execute INDIVIDUAL update for Reply (Formula + Note)
+                    await _remoteDataSource.updateStudentStatus(
+                      spreadsheetId: spreadsheetId,
+                      rowIndex: actualStartRow + i,
+                      statusColumnIndex: statusColumnIndex,
+                      action: FollowUpAction
+                          .sent, // Light Red as requested for replies
+                      sheetId: sheetId,
+                      formula: newFormula,
+                      note: snippet, // Full decoded snippet in Note
+                    );
+                  } else {
+                    // --- NO ANSWER ---
+                    // Batch this update!
+                    updates.add(
+                      StudentStatusUpdateModel(
+                        rowIndex: actualStartRow + i,
+                        statusColumnIndex: statusColumnIndex,
+                        action: FollowUpAction.noAnswer, // Dark Red
+                        sheetId: sheetId,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                // Log error but continue to next student
+                // print('Error processing thread $threadId: $e');
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Execute BATCH Update for "No Answer"
+      if (updates.isNotEmpty) {
+        await _remoteDataSource.batchUpdateStatus(
+          spreadsheetId: spreadsheetId,
+          updates: updates,
+        );
+      }
+
       return const Right(null);
     } on GoogleAuthException catch (e) {
       return Left(AuthFailure(e.message, e.type));

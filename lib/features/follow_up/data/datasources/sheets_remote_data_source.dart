@@ -36,7 +36,9 @@ abstract interface class SheetsRemoteDataSource {
     required int rowIndex,
     required int statusColumnIndex,
     required FollowUpAction action,
-    int? sheetId, // Added optional GID
+    int? sheetId,
+    String? formula, // New: For HYPERLINK
+    String? note,
   });
 
   Future<void> batchUpdateStatus({
@@ -46,10 +48,19 @@ abstract interface class SheetsRemoteDataSource {
 
   Future<List<String>> getColumnData({
     required String spreadsheetId,
-    required int? sheetId, // Changed from sheetName to sheetId (GID)
-    required int columnIndex, // 0-based
-    required int startRow, // 1-based
-    required int endRow, // 1-based
+    required int? sheetId,
+    required int columnIndex,
+    required int startRow,
+    required int endRow,
+  });
+
+  // New: Fetch formulas to extract thread IDs
+  Future<List<String>> getColumnFormulas({
+    required String spreadsheetId,
+    required int? sheetId,
+    required int columnIndex,
+    required int startRow,
+    required int endRow,
   });
 }
 
@@ -381,15 +392,12 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
     required int rowIndex,
     required int statusColumnIndex,
     required FollowUpAction action,
-    int? sheetId, // Added optional GID
+    int? sheetId,
+    String? formula,
+    String? note,
   }) async {
     try {
       final sheetsApi = await _getSheetsApi();
-      final sheetName = await _getSheetTitle(
-        sheetsApi,
-        spreadsheetId,
-        sheetId,
-      ); // Assuming first sheet
 
       String statusText;
       color.Color statusColor;
@@ -397,44 +405,52 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       switch (action) {
         case FollowUpAction.sent:
           statusText = 'Email Sent';
-          statusColor = const color.Color(0xFFFFCDD2); // Red 100
+          statusColor = const color.Color(0xFFFFCDD2); // Light Red
           break;
         case FollowUpAction.markedAsDone:
           statusText = 'Done';
-          statusColor = const color.Color(0xFFC8E6C9); // Green 100
+          statusColor = const color.Color(0xFF00FF00); // Bright Green
+          break;
+        case FollowUpAction.noAnswer:
+          statusText = 'No Answer';
+          statusColor = const color.Color(0xFFFF0000); // Bright Red
           break;
       }
 
-      final colLetter = _getColumnLetter(statusColumnIndex);
-      final range = '$sheetName!$colLetter$rowIndex';
-
-      // 1. Update Text
-      await sheetsApi.spreadsheets.values.update(
-        ValueRange(
-          values: [
-            [statusText],
-          ],
-        ),
-        spreadsheetId,
-        range,
-        valueInputOption: 'USER_ENTERED',
-      );
-
-      // 2. Update Color
-      // We need the SheetId (GID) for batchUpdate.
-      // If we already have it (passed as param), use it.
-      // If not, we have to look it up (which _getSheetTitle did essentially).
-      // Since _getSheetTitle returns the NAME, we might need to change it or fetch metadata again.
-      // BUT, checking the existing logic: it fetches metadata to get sheetId.
-      // Let's optimize: If we have sheetId param, use it!
+      // We use batchUpdate for EVERYTHING now to support formulas + colors in one go
+      // Fetch GID if missing
       int targetGid;
       if (sheetId != null) {
         targetGid = sheetId;
       } else {
-        // Fallback: fetch metadata if no GID provided
         final meta = await sheetsApi.spreadsheets.get(spreadsheetId);
         targetGid = meta.sheets![0].properties!.sheetId!;
       }
+
+      final cellData = CellData(
+        userEnteredFormat: CellFormat(
+          backgroundColor: googleColorFrom(statusColor),
+        ),
+      );
+
+      if (formula != null) {
+        cellData.userEnteredValue = ExtendedValue(formulaValue: formula);
+        // CRITICAL: Force black text and no underline for hyperlinks
+        cellData.userEnteredFormat!.textFormat = TextFormat(
+          foregroundColor: Color(red: 0, green: 0, blue: 0),
+          underline: false,
+        );
+      } else {
+        cellData.userEnteredValue = ExtendedValue(stringValue: statusText);
+      }
+
+      if (note != null) {
+        cellData.note = note;
+      }
+
+      final String fields = note != null
+          ? 'userEnteredFormat(backgroundColor,textFormat),userEnteredValue,note'
+          : 'userEnteredFormat(backgroundColor,textFormat),userEnteredValue';
 
       final request = Request(
         repeatCell: RepeatCellRequest(
@@ -445,12 +461,8 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
             startColumnIndex: statusColumnIndex,
             endColumnIndex: statusColumnIndex + 1,
           ),
-          cell: CellData(
-            userEnteredFormat: CellFormat(
-              backgroundColor: googleColorFrom(statusColor),
-            ),
-          ),
-          fields: 'userEnteredFormat.backgroundColor',
+          cell: cellData,
+          fields: fields,
         ),
       );
 
@@ -492,15 +504,38 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
         switch (update.action) {
           case FollowUpAction.sent:
             statusText = 'Email Sent';
-            statusColor = const color.Color(0xFFFFCDD2); // Red 100
+            statusColor = const color.Color(0xFFFFCDD2); // Light Red
             break;
           case FollowUpAction.markedAsDone:
             statusText = 'Done';
-            statusColor = const color.Color(0xFFC8E6C9); // Green 100
+            statusColor = const color.Color(0xFF00FF00); // Bright Green
+            break;
+          case FollowUpAction.noAnswer:
+            statusText = 'No Answer';
+            statusColor = const color.Color(0xFFFF0000); // Bright Red
             break;
         }
 
         // Create UpdateCellsRequest for this specific cell
+        final cellData = CellData(
+          userEnteredFormat: CellFormat(
+            backgroundColor: googleColorFrom(statusColor),
+          ),
+        );
+
+        // Note: BatchUpdate on models currently doesn't support 'formula' or 'note' overrides per item effectively
+        // unless we add them to the model. We did add 'note' to the model.
+
+        if (update.note != null) {
+          cellData.note = update.note;
+        }
+
+        cellData.userEnteredValue = ExtendedValue(stringValue: statusText);
+
+        final String fields = update.note != null
+            ? 'userEnteredValue,userEnteredFormat.backgroundColor,note'
+            : 'userEnteredValue,userEnteredFormat.backgroundColor';
+
         requests.add(
           Request(
             updateCells: UpdateCellsRequest(
@@ -521,7 +556,8 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
                   ],
                 ),
               ],
-              fields: 'userEnteredValue,userEnteredFormat.backgroundColor',
+              // fields: 'userEnteredValue,userEnteredFormat.backgroundColor',
+              fields: fields,
             ),
           ),
         );
@@ -579,6 +615,49 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
       return result;
     } catch (e) {
       throw SheetException('Failed to fetch column data: $e');
+    }
+  }
+
+  @override
+  Future<List<String>> getColumnFormulas({
+    required String spreadsheetId,
+    required int? sheetId,
+    required int columnIndex,
+    required int startRow,
+    required int endRow,
+  }) async {
+    try {
+      final sheetsApi = await _getSheetsApi();
+      final sheetName = await _getSheetTitle(sheetsApi, spreadsheetId, sheetId);
+      final colLetter = _getColumnLetter(columnIndex);
+      final range = '$sheetName!$colLetter$startRow:$colLetter$endRow';
+
+      // Important: valueRenderOption = FORMULA
+      final response = await sheetsApi.spreadsheets.values.get(
+        spreadsheetId,
+        range,
+        valueRenderOption: 'FORMULA',
+      );
+
+      final values = response.values;
+      if (values == null || values.isEmpty) {
+        return List.filled(endRow - startRow + 1, '');
+      }
+
+      final result = <String>[];
+      final expectedCount = endRow - startRow + 1;
+
+      for (int i = 0; i < expectedCount; i++) {
+        if (i < values.length && values[i].isNotEmpty) {
+          result.add(values[i].first.toString().trim());
+        } else {
+          result.add('');
+        }
+      }
+
+      return result;
+    } catch (e) {
+      throw SheetException('Failed to fetch column formulas: $e');
     }
   }
 

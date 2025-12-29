@@ -14,6 +14,8 @@ abstract interface class FollowUpRepository {
     bool detectMergedHeaders = false,
   });
 
+  Future<Either<Failure, String>> getCurrentUserEmail();
+
   Future<Either<Failure, AssignmentAnalysisResult>> analyzeAssignmentStatus({
     required String masterSheetId,
     required int? masterSheetIdGid,
@@ -24,7 +26,7 @@ abstract interface class FollowUpRepository {
     required int? currentSheetIdGid,
   });
 
-  Future<Either<Failure, void>> sendFollowUpEmail({
+  Future<Either<Failure, String>> sendFollowUpEmail({
     required StudentEntity student,
     required String assignmentName,
   });
@@ -39,10 +41,19 @@ abstract interface class FollowUpRepository {
     required int statusColumnIndex,
     required FollowUpAction action,
     int? sheetId,
+    String? formula,
+    String? note,
   });
 
   Future<Either<Failure, void>> batchUpdateStudentStatus({
     required String spreadsheetId,
     required List<StudentStatusUpdateModel> updates,
+  });
+
+  Future<Either<Failure, void>> checkStudentReplies({
+    required String spreadsheetId,
+    required int? sheetId,
+    required int statusColumnIndex,
+    required int followUpHeaderRowIndex,
   });
 }

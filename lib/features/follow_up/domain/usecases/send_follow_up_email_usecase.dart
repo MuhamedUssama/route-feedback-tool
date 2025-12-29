@@ -8,13 +8,13 @@ import '../repositories/follow_up_repository.dart';
 
 @lazySingleton
 class SendFollowUpEmailUseCase
-    implements UseCase<void, SendFollowUpEmailParams> {
+    implements UseCase<String, SendFollowUpEmailParams> {
   final FollowUpRepository _repository;
 
   SendFollowUpEmailUseCase(this._repository);
 
   @override
-  Future<Either<Failure, void>> call(SendFollowUpEmailParams params) async {
+  Future<Either<Failure, String>> call(SendFollowUpEmailParams params) async {
     return await _repository.sendFollowUpEmail(
       student: params.student,
       assignmentName: params.assignmentName,

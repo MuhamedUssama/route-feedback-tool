@@ -168,6 +168,43 @@ class _FollowUpViewState extends State<_FollowUpView> {
     );
   }
 
+  void _triggerCheckReplies() {
+    final configState = context.read<FollowUpConfigCubit>().state;
+    final currentAssignmentSheetUrl = configState.maybeWhen(
+      configLoaded: (config) => config.assignmentsSheetUrl,
+      orElse: () => null,
+    );
+    final followUpSheetUrl = configState.maybeWhen(
+      configLoaded: (config) => config.followUpSheetUrl,
+      orElse: () => null,
+    );
+
+    if (currentAssignmentSheetUrl == null ||
+        followUpSheetUrl == null ||
+        _assignmentRow == null ||
+        _followUpRow == null ||
+        _assignmentCol == null ||
+        _statusCol == null) {
+      _showMessenger(
+        context,
+        MessengerType.error,
+        'Invalid Selection',
+        'Please ensure all fields (Rows & Columns) are selected.',
+      );
+      return;
+    }
+
+    context.read<FollowUpActionCubit>().checkReplies(
+      spreadsheetUrl: followUpSheetUrl,
+      statusColumnIndex: _statusCol!,
+      followUpHeaderRowIndex: _followUpRow!,
+      masterSheetUrl: currentAssignmentSheetUrl,
+      masterHeaderRowIndex: _assignmentRow!,
+      localHeaderRowIndex: _followUpRow!,
+      gradeColumnIndex: _assignmentCol!,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
@@ -280,30 +317,62 @@ class _FollowUpViewState extends State<_FollowUpView> {
                 _statusCol != null)
               Container(
                     margin: const EdgeInsets.symmetric(vertical: 16),
-                    child: ElevatedButton.icon(
-                      onPressed: _triggerCheckAssignments,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 48,
-                          vertical: 24,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _triggerCheckAssignments,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 24),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            icon: const Icon(Icons.search_rounded, size: 28),
+                            label: Text(
+                              'CHECK ASSIGNMENTS',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _triggerCheckReplies,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 24),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.tertiary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onTertiary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.mark_email_read_rounded,
+                              size: 28,
+                            ),
+                            label: Text(
+                              'CHECK REPLIES',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ),
-                        minimumSize: Size(
-                          MediaQuery.of(context).size.width * 0.46,
-                          56,
-                        ),
-                      ),
-                      icon: const Icon(Icons.search_rounded, size: 28),
-                      label: Text(
-                        'CHECK FOR MISSING ASSIGNMENTS',
-                        style: GoogleFonts.outfit(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
+                      ],
                     ),
                   )
                   .animate()

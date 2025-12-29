@@ -21,6 +21,7 @@ class UpdateStudentStatusUseCase
       statusColumnIndex: params.statusColumnIndex,
       action: params.action,
       sheetId: params.sheetId,
+      formula: params.formula,
     );
   }
 }
@@ -31,6 +32,8 @@ class UpdateStudentStatusParams extends Equatable {
   final int statusColumnIndex;
   final FollowUpAction action;
   final int? sheetId;
+  final String? formula;
+  final String? note;
 
   const UpdateStudentStatusParams({
     required this.spreadsheetId,
@@ -38,6 +41,8 @@ class UpdateStudentStatusParams extends Equatable {
     required this.statusColumnIndex,
     required this.action,
     this.sheetId,
+    this.formula,
+    this.note,
   });
 
   @override
@@ -47,5 +52,7 @@ class UpdateStudentStatusParams extends Equatable {
     statusColumnIndex,
     action,
     sheetId,
+    formula,
+    note,
   ];
 }

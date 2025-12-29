@@ -20,6 +20,7 @@ class GoogleAuthClient {
     'openid',
     SheetsApi.spreadsheetsScope,
     GmailApi.gmailSendScope,
+    GmailApi.gmailReadonlyScope,
   ];
 
   // Cache for the authenticated client and account

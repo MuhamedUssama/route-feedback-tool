@@ -9,10 +9,14 @@ import '../../../../core/network/google_auth_client.dart';
 import '../../domain/entities/student_entity.dart';
 
 abstract interface class GmailRemoteDataSource {
-  Future<void> sendFollowUpEmail({
+  Future<String> sendFollowUpEmail({
     required StudentEntity student,
     required String assignmentName,
   });
+
+  Future<Thread> getThread(String threadId);
+
+  Future<String> getCurrentUserEmail();
 }
 
 @LazySingleton(as: GmailRemoteDataSource)
@@ -22,7 +26,7 @@ class GmailRemoteDataSourceImpl implements GmailRemoteDataSource {
   GmailRemoteDataSourceImpl(this._googleAuthClient, this._sharedPrefsService);
 
   @override
-  Future<void> sendFollowUpEmail({
+  Future<String> sendFollowUpEmail({
     required StudentEntity student,
     required String assignmentName,
   }) async {
@@ -55,9 +59,47 @@ class GmailRemoteDataSourceImpl implements GmailRemoteDataSource {
           body: htmlBody,
         );
 
-      await gmailApi.users.messages.send(message, 'me');
+      final sentMessage = await gmailApi.users.messages.send(message, 'me');
+      return sentMessage.threadId ?? '';
     } catch (e) {
       throw ServerException('Failed to send email: $e');
+    }
+  }
+
+  @override
+  Future<Thread> getThread(String threadId) async {
+    try {
+      final client = await _googleAuthClient.getAuthenticatedClient();
+      if (client == null) {
+        throw const GoogleAuthException(
+          'User not authenticated',
+          AuthErrorType.userNotAuthenticated,
+        );
+      }
+
+      final GmailApi gmailApi = GmailApi(client);
+      return await gmailApi.users.threads.get('me', threadId);
+    } catch (e) {
+      throw ServerException('Failed to fetch thread: $e');
+    }
+  }
+
+  @override
+  Future<String> getCurrentUserEmail() async {
+    try {
+      final client = await _googleAuthClient.getAuthenticatedClient();
+      if (client == null) {
+        throw const GoogleAuthException(
+          'User not authenticated',
+          AuthErrorType.userNotAuthenticated,
+        );
+      }
+
+      final GmailApi gmailApi = GmailApi(client);
+      final profile = await gmailApi.users.getProfile('me');
+      return profile.emailAddress ?? '';
+    } catch (e) {
+      throw ServerException('Failed to fetch user email: $e');
     }
   }
 

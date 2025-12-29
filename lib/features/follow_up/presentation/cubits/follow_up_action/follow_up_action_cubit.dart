@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mentor_assistant/core/usecases/usecase.dart';
 import 'package:mentor_assistant/core/utils/google_sheet_url_parser.dart';
 import 'package:mentor_assistant/core/utils/sheet_utils.dart';
 import '../../../domain/entities/sheet_column_entity.dart';
@@ -11,6 +12,8 @@ import '../../../domain/usecases/get_sheet_headers_usecase.dart';
 import '../../../domain/usecases/send_follow_up_email_usecase.dart';
 import '../../../domain/usecases/update_student_status_usecase.dart';
 import '../../../domain/usecases/batch_update_student_status_usecase.dart';
+import '../../../domain/usecases/check_student_replies_usecase.dart';
+import '../../../domain/usecases/get_current_user_email_usecase.dart';
 import '../../../data/models/student_status_update_model.dart';
 
 part 'follow_up_action_state.dart';
@@ -23,6 +26,8 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
   final SendFollowUpEmailUseCase _sendFollowUpEmailUseCase;
   final UpdateStudentStatusUseCase _updateStudentStatusUseCase;
   final BatchUpdateStudentStatusUseCase _batchUpdateStudentStatusUseCase;
+  final CheckStudentRepliesUseCase _checkStudentRepliesUseCase;
+  final GetCurrentUserEmailUseCase _getCurrentUserEmailUseCase;
 
   FollowUpActionCubit(
     this._getSheetHeadersUseCase,
@@ -30,6 +35,8 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
     this._sendFollowUpEmailUseCase,
     this._updateStudentStatusUseCase,
     this._batchUpdateStudentStatusUseCase,
+    this._checkStudentRepliesUseCase,
+    this._getCurrentUserEmailUseCase,
   ) : super(const FollowUpActionState.initial());
 
   Future<void> fetchSetupData({
@@ -183,6 +190,15 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
       return;
     }
 
+    // 0. Fetch Current User Email (for link generation)
+    String currentUserEmail = '';
+    final emailResult = await _getCurrentUserEmailUseCase(NoParams());
+    emailResult.fold(
+      // Ignore error, just default to empty/generic link behavior if needed
+      (failure) => null,
+      (email) => currentUserEmail = email,
+    );
+
     // 1. Send Emails to Missing Students
     for (int i = 0; i < students.length; i++) {
       currentProgress++;
@@ -210,20 +226,28 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
         ),
       );
 
+      String? threadId;
       bool emailSent = false;
+
       emailResult.fold(
         (failure) {
           failedEmails.add(student.email);
         },
-        (_) {
+        (tId) {
           emailSent = true;
+          threadId = tId;
           sentCount++;
         },
       );
 
-      // Status Update (Only if email sent successfully)
-      if (emailSent) {
+      if (emailSent && threadId != null) {
         if (student.followUpRowNumber != null) {
+          final authUserParam = currentUserEmail.isNotEmpty
+              ? '?authuser=$currentUserEmail'
+              : '';
+          final formula =
+              '=HYPERLINK("https://mail.google.com/mail/u/$authUserParam#inbox/$threadId", "Email Sent")';
+
           await _updateStudentStatusUseCase(
             UpdateStudentStatusParams(
               spreadsheetId: sheetInfo.spreadsheetId,
@@ -231,6 +255,7 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
               statusColumnIndex: statusColumnIndex,
               action: FollowUpAction.sent,
               sheetId: sheetInfo.gid,
+              formula: formula,
             ),
           );
         } else {
@@ -238,17 +263,16 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
             '${student.email} (Status Update Failed: Row Unknown)',
           );
         }
+      } else if (emailSent) {
+        failedEmails.add('${student.email} (No Thread ID returned)');
       }
     }
 
-    // 2. Batch Mark Submitted Students as Done
     if (markSubmittedAsDone) {
       final validSubmitted = submittedStudents
           .where((s) => s.followUpRowNumber != null)
           .toList();
 
-      // If we have invalid ones, we could log them or add to failedEmails.
-      // For now, let's just count them as processed to finish progress bar.
       final skippedCount = submittedStudents.length - validSubmitted.length;
       if (skippedCount > 0) {
         currentProgress += skippedCount;
@@ -304,6 +328,50 @@ class FollowUpActionCubit extends Cubit<FollowUpActionState> {
       FollowUpActionState.success(
         'Sent: $sentCount, Marked Done: $markedDoneCount, Failed: ${failedEmails.length}',
       ),
+    );
+  }
+
+  Future<void> checkReplies({
+    required String spreadsheetUrl,
+    required int statusColumnIndex,
+    required int followUpHeaderRowIndex,
+    required String masterSheetUrl,
+    required int masterHeaderRowIndex,
+    required int localHeaderRowIndex,
+    required int gradeColumnIndex,
+  }) async {
+    emit(const FollowUpActionState.loadingStudents());
+
+    final sheetInfo = GoogleSheetUrlParser.parse(spreadsheetUrl);
+    if (sheetInfo == null) {
+      emit(const FollowUpActionState.error("Invalid Spreadsheet URL"));
+      return;
+    }
+
+    final result = await _checkStudentRepliesUseCase(
+      CheckStudentRepliesParams(
+        spreadsheetId: sheetInfo.spreadsheetId,
+        sheetId: sheetInfo.gid,
+        statusColumnIndex: statusColumnIndex,
+        followUpHeaderRowIndex: followUpHeaderRowIndex,
+      ),
+    );
+
+    await result.fold(
+      (failure) async {
+        emit(FollowUpActionState.error(failure.message));
+      },
+      (_) async {
+        emit(const FollowUpActionState.success('Replies Checked Successfully'));
+
+        await checkAssignments(
+          masterSheetUrl: masterSheetUrl,
+          masterHeaderRowIndex: masterHeaderRowIndex,
+          localHeaderRowIndex: localHeaderRowIndex,
+          gradeColumnIndex: gradeColumnIndex,
+          currentSheetUrl: spreadsheetUrl,
+        );
+      },
     );
   }
 }

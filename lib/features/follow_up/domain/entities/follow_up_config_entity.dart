@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum FollowUpAction { markedAsDone, sent }
+enum FollowUpAction { markedAsDone, sent, noAnswer }
 
 class FollowUpConfigEntity extends Equatable {
   final String assignmentsSheetUrl;
