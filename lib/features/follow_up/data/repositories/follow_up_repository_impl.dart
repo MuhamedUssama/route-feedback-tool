@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
@@ -168,14 +171,8 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
     required int followUpHeaderRowIndex,
   }) async {
     try {
-      // 1. Fetch formulas from the Sheet
-      // We assume data starts after the header row.
-      // Actually, we should start checking from followUpHeaderRowIndex + 1
       final int actualStartRow = followUpHeaderRowIndex + 1;
 
-      // We'll fetch a reasonable amount of rows, e.g., until row 1000 or implement chunking later.
-      // For now let's fetch until 500 rows to be safe or just fetch column data.
-      // RemoteDataSource handles empty checking.
       const int endRow = 500;
 
       final formulas = await _remoteDataSource.getColumnFormulas(
@@ -186,52 +183,73 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
         endRow: endRow,
       );
 
-      final updates = <StudentStatusUpdateModel>[];
       final threadIdRegex = RegExp(r'#inbox/([a-z0-9]+)', caseSensitive: false);
+      final urlRegex = RegExp(r'=HYPERLINK\("([^"]+)"', caseSensitive: false);
 
       for (int i = 0; i < formulas.length; i++) {
         final formula = formulas[i];
-        // Check if cell is "Email Sent" via Hyperlink
-        if (formula.contains('=HYPERLINK') && formula.contains('Email Sent')) {
-          final match = threadIdRegex.firstMatch(formula);
-          if (match != null) {
-            final threadId = match.group(1);
-            if (threadId != null) {
-              // 2. Fetch Thread from Gmail
+
+        if (formula.contains('=HYPERLINK')) {
+          final threadIdMatch = threadIdRegex.firstMatch(formula);
+          final urlMatch = urlRegex.firstMatch(formula);
+
+          if (threadIdMatch != null && urlMatch != null) {
+            final threadId = threadIdMatch.group(1);
+            final currentUrl = urlMatch.group(1);
+
+            if (threadId != null && currentUrl != null) {
               try {
                 final thread = await _transportGmail.getThread(threadId);
                 final messages = thread.messages;
 
                 if (messages != null && messages.isNotEmpty) {
-                  final lastMessage = messages.last;
+                  final studentMessages = <String>[];
 
-                  // CHECK SENDER LOGIC: Rely on LABEL IDS
-                  // If 'SENT' is present, I sent the last message -> NO ANSWER.
-                  // If 'SENT' is NOT present, Student sent the last message -> REPLY FOUND.
+                  // Regex to remove "On ... wrote:" and similar quotaion headers
+                  // We'll use a basic version that catches common Gmail headers
+                  final quoteRegex = RegExp(
+                    r'On\s+.*wrote:.*',
+                    caseSensitive: false,
+                    dotAll: true,
+                  );
 
-                  bool isLastMessageSentByMe = false;
-                  if (lastMessage.labelIds != null &&
-                      lastMessage.labelIds!.contains('SENT')) {
-                    isLastMessageSentByMe = true;
+                  for (var message in messages) {
+                    bool isSentByMe = false;
+                    if (message.labelIds != null &&
+                        message.labelIds!.contains('SENT')) {
+                      isSentByMe = true;
+                    }
+
+                    if (!isSentByMe) {
+                      var snippet = message.snippet ?? "";
+                      if (snippet.isNotEmpty) {
+                        // Decode HTML entities
+                        final unescape = HtmlUnescape();
+                        snippet = unescape.convert(snippet);
+
+                        // Clean quotes (if snippet contains them, though snippet usually short)
+                        snippet = snippet.replaceAll(quoteRegex, '').trim();
+
+                        if (snippet.isNotEmpty) {
+                          studentMessages.add(snippet);
+                        }
+                      }
+                    }
                   }
 
-                  if (!isLastMessageSentByMe) {
-                    // --- REPLY FOUND ---
-                    var snippet = lastMessage.snippet ?? "Reply Received";
+                  if (studentMessages.isNotEmpty) {
+                    // --- REPLY FOUND (At least one) ---
 
-                    // Decode HTML entities (e.g., &#39; -> ')
-                    final unescape = HtmlUnescape();
-                    snippet = unescape.convert(snippet);
+                    // Form Accumulated Note
+                    final noteBuffer = StringBuffer();
+                    for (var msg in studentMessages) {
+                      noteBuffer.writeln('- $msg');
+                    }
+                    final accumulatedNote = noteBuffer.toString().trim();
 
-                    // New Formula: =HYPERLINK("link", "📩 Reply Received")
-                    // We preserve the link but update the label to fixed text.
-                    // The snippet goes into the NOTE.
-                    final newFormula = formula.replaceFirst(
-                      '"Email Sent"',
-                      '"📩 Reply Received"',
-                    );
-                    // Also guard against if it was already "Reply: ..."
-                    // But assume we are transitioning from "Email Sent".
+                    // Reconstruct Formula: =HYPERLINK("$currentUrl", "📩 Reply Received")
+                    final newFormula =
+                        '=HYPERLINK("$currentUrl", "📩 Reply Received")';
 
                     // Execute INDIVIDUAL update for Reply (Formula + Note)
                     await _remoteDataSource.updateStudentStatus(
@@ -239,39 +257,35 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
                       rowIndex: actualStartRow + i,
                       statusColumnIndex: statusColumnIndex,
                       action: FollowUpAction
-                          .sent, // Light Red as requested for replies
+                          .sent, // Light Red (0xFFFFCDD2) as requested
                       sheetId: sheetId,
                       formula: newFormula,
-                      note: snippet, // Full decoded snippet in Note
+                      note: accumulatedNote,
                     );
                   } else {
                     // --- NO ANSWER ---
-                    // Batch this update!
-                    updates.add(
-                      StudentStatusUpdateModel(
-                        rowIndex: actualStartRow + i,
-                        statusColumnIndex: statusColumnIndex,
-                        action: FollowUpAction.noAnswer, // Dark Red
-                        sheetId: sheetId,
-                      ),
+                    // Reconstruct Formula: =HYPERLINK("currentUrl", "No Answer")
+                    final newFormula = '=HYPERLINK("$currentUrl", "No Answer")';
+
+                    await _remoteDataSource.updateStudentStatus(
+                      spreadsheetId: spreadsheetId,
+                      rowIndex: actualStartRow + i,
+                      statusColumnIndex: statusColumnIndex,
+                      action: FollowUpAction.noAnswer, // Bright Red
+                      sheetId: sheetId,
+                      formula: newFormula,
+                      note: '', // Clear any previous notes
                     );
                   }
                 }
               } catch (e) {
-                // Log error but continue to next student
-                // print('Error processing thread $threadId: $e');
+                if (kDebugMode) {
+                  log('Error processing thread $threadId: $e');
+                }
               }
             }
           }
         }
-      }
-
-      // 3. Execute BATCH Update for "No Answer"
-      if (updates.isNotEmpty) {
-        await _remoteDataSource.batchUpdateStatus(
-          spreadsheetId: spreadsheetId,
-          updates: updates,
-        );
       }
 
       return const Right(null);

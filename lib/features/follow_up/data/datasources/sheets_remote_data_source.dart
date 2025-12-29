@@ -409,7 +409,7 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
           break;
         case FollowUpAction.markedAsDone:
           statusText = 'Done';
-          statusColor = const color.Color(0xFF00FF00); // Bright Green
+          statusColor = const color.Color(0xFFC8E6C9); // Soft Green
           break;
         case FollowUpAction.noAnswer:
           statusText = 'No Answer';
@@ -435,13 +435,15 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
 
       if (formula != null) {
         cellData.userEnteredValue = ExtendedValue(formulaValue: formula);
-        // CRITICAL: Force black text and no underline for hyperlinks
+        // CRITICAL: Force black text, no underline, center alignment
         cellData.userEnteredFormat!.textFormat = TextFormat(
           foregroundColor: Color(red: 0, green: 0, blue: 0),
           underline: false,
         );
+        cellData.userEnteredFormat!.horizontalAlignment = 'CENTER';
       } else {
         cellData.userEnteredValue = ExtendedValue(stringValue: statusText);
+        cellData.userEnteredFormat!.horizontalAlignment = 'CENTER';
       }
 
       if (note != null) {
@@ -485,9 +487,6 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
     try {
       final sheetsApi = await _getSheetsApi();
 
-      // OPTIMIZATION: If sheetId is missing in updates, we might need to fetch it.
-      // However, our logic assumes we have it from existing flow (StudentModel has followUpRowNumber mapped).
-      // If we don't have sheetId (GID), we must fetch it once.
       int? defaultSheetId;
       if (updates.any((u) => u.sheetId == null)) {
         final meta = await sheetsApi.spreadsheets.get(spreadsheetId);
@@ -508,7 +507,7 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
             break;
           case FollowUpAction.markedAsDone:
             statusText = 'Done';
-            statusColor = const color.Color(0xFF00FF00); // Bright Green
+            statusColor = const color.Color(0xFFC8E6C9); // Soft Green
             break;
           case FollowUpAction.noAnswer:
             statusText = 'No Answer';
@@ -520,11 +519,9 @@ class SheetsRemoteDataSourceImpl implements SheetsRemoteDataSource {
         final cellData = CellData(
           userEnteredFormat: CellFormat(
             backgroundColor: googleColorFrom(statusColor),
+            horizontalAlignment: 'CENTER',
           ),
         );
-
-        // Note: BatchUpdate on models currently doesn't support 'formula' or 'note' overrides per item effectively
-        // unless we add them to the model. We did add 'note' to the model.
 
         if (update.note != null) {
           cellData.note = update.note;
