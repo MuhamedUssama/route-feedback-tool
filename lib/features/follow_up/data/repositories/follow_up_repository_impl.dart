@@ -205,9 +205,7 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
                 if (messages != null && messages.isNotEmpty) {
                   final studentMessages = <String>[];
 
-                  // Regex to remove "On ... wrote:" and similar quotaion headers
-                  // We'll use a basic version that catches common Gmail headers
-                  final quoteRegex = RegExp(
+                  final RegExp quoteRegex = RegExp(
                     r'On\s+.*wrote:.*',
                     caseSensitive: false,
                     dotAll: true,
@@ -224,7 +222,7 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
                       var snippet = message.snippet ?? "";
                       if (snippet.isNotEmpty) {
                         // Decode HTML entities
-                        final unescape = HtmlUnescape();
+                        final HtmlUnescape unescape = HtmlUnescape();
                         snippet = unescape.convert(snippet);
 
                         // Clean quotes (if snippet contains them, though snippet usually short)
@@ -248,33 +246,30 @@ class FollowUpRepositoryImpl implements FollowUpRepository {
                     final accumulatedNote = noteBuffer.toString().trim();
 
                     // Reconstruct Formula: =HYPERLINK("$currentUrl", "📩 Reply Received")
-                    final newFormula =
+                    final String newFormula =
                         '=HYPERLINK("$currentUrl", "📩 Reply Received")';
 
-                    // Execute INDIVIDUAL update for Reply (Formula + Note)
                     await _remoteDataSource.updateStudentStatus(
                       spreadsheetId: spreadsheetId,
                       rowIndex: actualStartRow + i,
                       statusColumnIndex: statusColumnIndex,
-                      action: FollowUpAction
-                          .sent, // Light Red (0xFFFFCDD2) as requested
+                      action: FollowUpAction.sent,
                       sheetId: sheetId,
                       formula: newFormula,
                       note: accumulatedNote,
                     );
                   } else {
                     // --- NO ANSWER ---
-                    // Reconstruct Formula: =HYPERLINK("currentUrl", "No Answer")
                     final newFormula = '=HYPERLINK("$currentUrl", "No Answer")';
 
                     await _remoteDataSource.updateStudentStatus(
                       spreadsheetId: spreadsheetId,
                       rowIndex: actualStartRow + i,
                       statusColumnIndex: statusColumnIndex,
-                      action: FollowUpAction.noAnswer, // Bright Red
+                      action: FollowUpAction.noAnswer,
                       sheetId: sheetId,
                       formula: newFormula,
-                      note: '', // Clear any previous notes
+                      note: '',
                     );
                   }
                 }

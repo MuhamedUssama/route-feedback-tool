@@ -102,6 +102,7 @@ class _StudentDataTableState extends State<StudentDataTable> {
     }
 
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(16),
@@ -130,7 +131,7 @@ class _StudentDataTableState extends State<StudentDataTable> {
                 controller: _horizontalScrollController,
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 800),
+                  constraints: const BoxConstraints(minWidth: 1200),
                   child: DataTable(
                     headingRowColor: WidgetStateProperty.all(
                       theme.colorScheme.surfaceContainerHighest.withValues(

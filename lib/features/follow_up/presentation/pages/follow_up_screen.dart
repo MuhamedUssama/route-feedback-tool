@@ -11,6 +11,7 @@ import 'package:mentor_assistant/features/follow_up/presentation/cubits/follow_u
 import 'package:mentor_assistant/features/follow_up/presentation/widgets/follow_up_action_footer.dart';
 import 'package:mentor_assistant/features/follow_up/presentation/widgets/follow_up_filter_header.dart';
 import 'package:mentor_assistant/features/follow_up/presentation/widgets/student_data_table.dart';
+import 'package:mentor_assistant/features/follow_up/presentation/widgets/follow_up_action_buttons.dart';
 
 class FollowUpScreen extends StatelessWidget {
   const FollowUpScreen({super.key});
@@ -315,69 +316,15 @@ class _FollowUpViewState extends State<_FollowUpView> {
                 _followUpRow != null &&
                 _assignmentCol != null &&
                 _statusCol != null)
-              Container(
-                    margin: const EdgeInsets.symmetric(vertical: 16),
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _triggerCheckAssignments,
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 24),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            icon: const Icon(Icons.search_rounded, size: 28),
-                            label: Text(
-                              'CHECK ASSIGNMENTS',
-                              style: GoogleFonts.outfit(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.0,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _triggerCheckReplies,
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 24),
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.tertiary,
-                              foregroundColor: Theme.of(
-                                context,
-                              ).colorScheme.onTertiary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            icon: const Icon(
-                              Icons.mark_email_read_rounded,
-                              size: 28,
-                            ),
-                            label: Text(
-                              'CHECK REPLIES',
-                              style: GoogleFonts.outfit(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.0,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(delay: 200.ms, duration: 400.ms)
-                  .scale(duration: 400.ms, curve: Curves.easeOutBack),
+              // Action Buttons (New Premium UI)
+              if (_assignmentRow != null &&
+                  _followUpRow != null &&
+                  _assignmentCol != null &&
+                  _statusCol != null)
+                FollowUpActionButtons(
+                  onCheckAssignments: _triggerCheckAssignments,
+                  onCheckReplies: _triggerCheckReplies,
+                ),
 
             // Data Table / Loading
             Expanded(
