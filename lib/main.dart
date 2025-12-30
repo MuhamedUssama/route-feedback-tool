@@ -19,6 +19,7 @@ Future<void> main() async {
     size: Size(1200, 800),
     center: true,
     title: "Route Mentor Assistant",
+    titleBarStyle: TitleBarStyle.hidden,
   );
 
   windowManager.waitUntilReadyToShow(options, () async {

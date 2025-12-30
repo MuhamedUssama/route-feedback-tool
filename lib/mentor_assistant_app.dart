@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mentor_assistant/core/router/app_router.dart';
 import 'package:mentor_assistant/core/theme/app_theme.dart';
+import 'package:mentor_assistant/core/widgets/custom_title_bar.dart';
 import 'package:mentor_assistant/features/settings/presentation/cubits/theme/theme_cubit.dart';
 
 class MentorAssistant extends StatelessWidget {
@@ -22,6 +23,14 @@ class MentorAssistant extends StatelessWidget {
             themeMode: themeMode,
             onGenerateRoute: AppRouter.onGenerateRoute,
             initialRoute: AppRouter.splashRoute,
+            builder: (context, child) {
+              return Column(
+                children: [
+                  const CustomTitleBar(),
+                  Expanded(child: child!),
+                ],
+              );
+            },
           );
         },
       ),
