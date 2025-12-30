@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import 'package:mentor_assistant/core/errors/failures.dart';
@@ -30,7 +28,6 @@ class ReportRepositoryImpl implements ReportRepository {
     if (!isConnected) {
       return Left(NetworkFailure('No internet connection'));
     }
-    log('followUpColumn: $followUpColumn');
     try {
       // 2. Parse URLs using generic 'parse' method
       final assignmentInfo = GoogleSheetUrlParser.parse(assignmentSheetUrl);
@@ -46,11 +43,6 @@ class ReportRepositoryImpl implements ReportRepository {
       final followUpColIndex = _columnIndex(followUpColumn);
       final assignAnchorColIndex = _columnIndex(assignmentEmailAnchorColumn);
       final followUpAnchorColIndex = _columnIndex(followUpEmailAnchorColumn);
-
-      log('assignmentStartRow: ${group.assignmentStartRow}');
-      log('assignmentEndRow: ${group.assignmentEndRow}');
-      log('followUpStartRow: ${group.followUpStartRow}');
-      log('followUpEndRow: ${group.followUpEndRow}');
 
       final results = await Future.wait([
         // 0: Assignment Data
@@ -100,16 +92,14 @@ class ReportRepositoryImpl implements ReportRepository {
 
       // Loop 1: Calculate Assignment Stats with Anchor Check
       for (int i = 0; i < assignmentData.length; i++) {
-        // Safety check for anchor data length
         if (i >= assignmentAnchorData.length) break;
 
-        final anchorVal = assignmentAnchorData[i].trim();
+        final String anchorVal = assignmentAnchorData[i].trim();
         if (anchorVal.isEmpty) {
-          // Skip if anchor is empty
           continue;
         }
 
-        final val = assignmentData[i];
+        final String val = assignmentData[i];
         if (val.trim().isNotEmpty) {
           submitted++;
         } else {
@@ -119,29 +109,19 @@ class ReportRepositoryImpl implements ReportRepository {
 
       // Loop 2: Calculate Follow-up Stats with Anchor Check
       for (int i = 0; i < followUpData.length; i++) {
-        // Safety check for anchor data length
         if (i >= followUpAnchorData.length) break;
 
-        final anchorVal = followUpAnchorData[i].trim();
+        final String anchorVal = followUpAnchorData[i].trim();
         if (anchorVal.isEmpty) {
-          // Skip if anchor is empty
           continue;
         }
 
-        final val = followUpData[i];
-        final followUpVal = val.trim().toLowerCase();
-        // Check for specific keywords
-        if (followUpVal.contains('email sent') ||
-            followUpVal.contains('sent') ||
-            followUpVal.contains('emailsent')) {
+        final String val = followUpData[i];
+        final String followUpVal = val.trim().toLowerCase();
+        if (followUpVal.isNotEmpty && !followUpVal.contains('done')) {
           followUp++;
         }
       }
-
-      // Log final results for confirmation
-      log(
-        'Final Stats -> Submitted: $submitted, Unsubmitted: $unsubmitted, FollowUp: $followUp',
-      );
 
       return Right({
         'submitted': submitted,
