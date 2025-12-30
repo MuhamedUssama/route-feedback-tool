@@ -15,7 +15,9 @@ class CustomTitleBar extends StatelessWidget {
       textDirection: TextDirection.ltr,
       child: Container(
         height: titleBarHeight,
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color:
+            Theme.of(context).navigationRailTheme.backgroundColor ??
+            Theme.of(context).scaffoldBackgroundColor,
         child: isWindows
             ? _buildWindowsLayout(context)
             : _buildMacOSLayout(context),
