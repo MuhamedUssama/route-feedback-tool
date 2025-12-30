@@ -13,7 +13,8 @@ class MainFlutterWindow: NSWindow {
     // 1. Initial Native Style (Melted Sidebar Look) & Boot Color
     self.titlebarAppearsTransparent = true
     self.styleMask.insert(.fullSizeContentView)
-    self.titleVisibility = .visible 
+    self.titlebarSeparatorStyle = .none
+    self.titleVisibility = .hidden 
     self.isMovableByWindowBackground = true
     
     // Boot Color: RGB(27, 29, 30) -> Dark Slate
