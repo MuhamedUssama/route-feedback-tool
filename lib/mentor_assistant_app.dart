@@ -45,7 +45,7 @@ class MentorAssistant extends StatelessWidget {
     final textColor = isDark ? Colors.white : Colors.black;
 
     try {
-      if (Platform.isWindows) {
+      if (Platform.isWindows || Platform.isMacOS) {
         await platform.invokeMethod('updateTitleBarColor', {
           'backgroundColor': color.toARGB32(),
           'textColor': textColor.toARGB32(),
