@@ -19,6 +19,8 @@ Future<void> main() async {
     size: Size(1200, 800),
     center: true,
     title: "Route Mentor Assistant",
+    backgroundColor: Color(0xFF1b1d1e),
+    titleBarStyle: TitleBarStyle.normal,
   );
 
   windowManager.waitUntilReadyToShow(options, () async {
