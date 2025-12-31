@@ -46,7 +46,7 @@ class SettingsFooter extends StatelessWidget {
                 Icon(Icons.code_rounded, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 8),
                 Text(
-                  'Route Mentor Assistant v1.0.0',
+                  'Route Mentor Assistant v1.1.0',
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
                     color: Colors.grey[600],
                     fontSize: 12,
