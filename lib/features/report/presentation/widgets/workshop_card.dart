@@ -67,8 +67,12 @@ class _WorkshopCardState extends State<WorkshopCard> {
                         final picked = await showDatePicker(
                           context: context,
                           initialDate: state.value ?? DateTime.now(),
-                          firstDate: DateTime(2023),
-                          lastDate: DateTime(2026),
+                          firstDate: DateTime.now().subtract(
+                            const Duration(days: 365),
+                          ),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
                         );
                         if (picked != null) {
                           state.didChange(picked);
