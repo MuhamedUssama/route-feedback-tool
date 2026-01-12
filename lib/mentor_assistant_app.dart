@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -52,7 +54,7 @@ class MentorAssistant extends StatelessWidget {
         });
       }
     } on PlatformException catch (e) {
-      debugPrint("Failed to update native title bar color: '${e.message}'.");
+      log("Failed to update native title bar color: '${e.message}'.");
     }
   }
 }

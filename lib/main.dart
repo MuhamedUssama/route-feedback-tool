@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -7,6 +10,7 @@ import 'package:mentor_assistant/core/services/bloc_observer.dart';
 import 'package:mentor_assistant/features/settings/data/models/cycle_config_model.dart';
 import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
 import 'package:mentor_assistant/mentor_assistant_app.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
 Future<void> main() async {
@@ -36,5 +40,14 @@ Future<void> main() async {
 
   await configureDependencies();
   Bloc.observer = MyBlocObserver();
-  runApp(const MentorAssistant());
+
+  if (kReleaseMode) {
+    await SentryFlutter.init((options) {
+      options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
+      options.tracesSampleRate = 1.0;
+      options.enablePrintBreadcrumbs = true;
+    }, appRunner: () => runApp(const MentorAssistant()));
+  } else {
+    runApp(const MentorAssistant());
+  }
 }

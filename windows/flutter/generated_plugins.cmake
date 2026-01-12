@@ -7,11 +7,13 @@ list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   printing
   screen_retriever_windows
+  sentry_flutter
   url_launcher_windows
   window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  jni
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)
