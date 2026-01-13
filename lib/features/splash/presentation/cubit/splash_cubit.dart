@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:auto_updater/auto_updater.dart';
 import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
@@ -29,10 +27,9 @@ class SplashCubit extends Cubit<SplashState> {
     try {
       final results = await Future.wait([
         Future.delayed(const Duration(seconds: 3)),
-        _checkForUpdates(),
         _checkAuthResult(),
       ]);
-      final authResult = results[2] as Either<Failure, UserEntity>;
+      final authResult = results[1] as Either<Failure, UserEntity>;
 
       if (!isClosed) {
         authResult.fold(
@@ -47,26 +44,6 @@ class SplashCubit extends Cubit<SplashState> {
 
   Future<Either<Failure, UserEntity>> _checkAuthResult() async {
     return await _authRepository.checkAutoLogin();
-  }
-
-  Future<void> _checkForUpdates() async {
-    if (kIsWeb || (!Platform.isMacOS && !Platform.isWindows)) return;
-
-    try {
-      if (!isClosed) {
-        state.maybeMap(
-          loading: (s) => emit(s.copyWith(message: 'Checking for updates...')),
-          orElse: () {},
-        );
-      }
-
-      const feedUrl =
-          'https://muhamedussama.github.io/mentor-assistant-web/appcast.xml';
-      await autoUpdater.setFeedURL(feedUrl);
-      await autoUpdater.checkForUpdates(inBackground: true);
-    } catch (e) {
-      debugPrint('Update check failed: $e');
-    }
   }
 
   void _startProgressTimer() {
