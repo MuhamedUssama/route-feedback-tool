@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -6,10 +7,13 @@ import 'package:mentor_assistant/core/di/injection.dart';
 import 'package:mentor_assistant/core/services/bloc_observer.dart';
 import 'package:mentor_assistant/features/settings/data/models/cycle_config_model.dart';
 import 'package:mentor_assistant/features/settings/data/models/group_config_model.dart';
+import 'package:mentor_assistant/firebase_options.dart';
 import 'package:mentor_assistant/mentor_assistant_app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await dotenv.load(fileName: ".env");
 
