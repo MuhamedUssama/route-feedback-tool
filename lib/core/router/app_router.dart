@@ -7,12 +7,9 @@ import 'package:mentor_assistant/features/main_layout/cubit/navigation_cubit.dar
 import 'package:mentor_assistant/features/main_layout/pages/main_layout_screen.dart';
 import 'package:mentor_assistant/features/settings/presentation/pages/cycle_config_page.dart';
 import 'package:mentor_assistant/features/settings/presentation/pages/settings_screen.dart';
-import 'package:mentor_assistant/features/splash/presentation/cubit/splash_cubit.dart';
-import 'package:mentor_assistant/features/splash/presentation/pages/splash_screen.dart';
 
 class AppRouter {
-  static const String initialRoute = '/';
-  static const String splashRoute = '/splash';
+  // static const String initialRoute = '/'; // Removed in favor of dynamic calculation
   static const String loginRoute = '/login';
   static const String mainLayoutRoute = '/main_layout';
   static const String settingsRoute = '/settings';
@@ -20,13 +17,6 @@ class AppRouter {
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case splashRoute:
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => GetIt.I<SplashCubit>(),
-            child: const SplashScreen(),
-          ),
-        );
       case loginRoute:
         return MaterialPageRoute(
           builder: (context) => BlocProvider(
