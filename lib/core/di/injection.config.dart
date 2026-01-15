@@ -20,6 +20,8 @@ import '../../features/auth/data/datasources/auth_remote_data_source.dart'
 import '../../features/auth/data/repositories/auth_repository_impl.dart'
     as _i153;
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
+import '../../features/auth/domain/usecases/check_auto_login_usecase.dart'
+    as _i863;
 import '../../features/auth/domain/usecases/get_cached_user_usecase.dart'
     as _i389;
 import '../../features/auth/domain/usecases/login_with_google_usecase.dart'
@@ -82,7 +84,6 @@ import '../../features/settings/presentation/cubits/settings/settings_cubit.dart
     as _i536;
 import '../../features/settings/presentation/cubits/theme/theme_cubit.dart'
     as _i34;
-import '../../features/splash/presentation/cubit/splash_cubit.dart' as _i125;
 import '../network/google_auth_client.dart' as _i527;
 import '../services/shared_prefs_service.dart' as _i816;
 import 'register_module.dart' as _i291;
@@ -159,6 +160,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i48.LogoutUseCase>(
       () => _i48.LogoutUseCase(gh<_i787.AuthRepository>()),
     );
+    gh.factory<_i863.CheckAutoLoginUseCase>(
+      () => _i863.CheckAutoLoginUseCase(gh<_i787.AuthRepository>()),
+    );
     gh.lazySingleton<_i797.CycleRepository>(
       () => _i1034.CycleRepositoryImpl(gh<_i1024.CycleLocalDataSource>()),
     );
@@ -219,11 +223,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i981.CycleConfigCubit>(
       () => _i981.CycleConfigCubit(gh<_i797.CycleRepository>()),
     );
-    gh.factory<_i125.SplashCubit>(
-      () => _i125.SplashCubit(gh<_i787.AuthRepository>()),
-    );
     gh.factory<_i117.AuthCubit>(
-      () => _i117.AuthCubit(gh<_i57.LoginWithGoogleUseCase>()),
+      () => _i117.AuthCubit(
+        gh<_i57.LoginWithGoogleUseCase>(),
+        gh<_i863.CheckAutoLoginUseCase>(),
+      ),
     );
     gh.factory<_i1069.ReportCubit>(
       () => _i1069.ReportCubit(

@@ -19,5 +19,6 @@ Future<void> main() async {
 
   await configureDependencies();
   Bloc.observer = MyBlocObserver();
-  runApp(const MentorAssistant());
+  final initialRoute = await getInitialRoute();
+  runApp(MentorAssistant(initialRoute: initialRoute));
 }
