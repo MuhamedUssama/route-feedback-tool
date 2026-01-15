@@ -1,16 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/gmail/v1.dart';
 import 'package:googleapis/sheets/v4.dart';
-import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
-import 'package:mentor_assistant/features/auth/data/models/credentials_model.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 @lazySingleton
 class GoogleAuthClient {
@@ -23,201 +18,104 @@ class GoogleAuthClient {
     GmailApi.gmailReadonlyScope,
   ];
 
-  // Cache for the authenticated client and account
-  http.Client? _cachedClient;
+  // Access the singleton instance directly
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+
+  // We must cache the account locally because v7 doesn't expose a 'currentUser' getter
   GoogleSignInAccount? _cachedAccount;
 
-  // Completer to handle concurrent login requests (Race Condition Prevention)
-  Completer<(http.Client?, GoogleSignInAccount?)>? _loginCompleter;
+  // Cache for the authenticated HTTP client
+  http.Client? _cachedClient;
 
   // ================== Main Entry Point (for APIs) ==================
+  /// Returns an authenticated HTTP client that injects the necessary headers.
+  /// If the user is not signed in via GoogleSignIn, this returns null.
   Future<http.Client?> getAuthenticatedClient() async {
+    // 1. If we have a cached client, return it.
     if (_cachedClient != null) {
       return _cachedClient;
     }
 
-    if (_loginCompleter != null) {
-      final (client, _) = await _loginCompleter!.future;
-      return client;
-    }
-
-    _loginCompleter = Completer<(http.Client?, GoogleSignInAccount?)>();
-
+    // 2. Try to restore session (Silent Sign In)
+    // In v7, 'attemptLightweightAuthentication' replaces 'signInSilently'
     try {
-      http.Client? client;
-      GoogleSignInAccount? account;
-
-      if (Platform.isMacOS) {
-        final (c, a) = await _signInMacOS();
-        client = c;
-        account = a;
-      } else if (Platform.isWindows) {
-        client = await _signInWindows();
-        account = null;
-      } else {
-        throw UnimplementedError("Platform not supported");
-      }
-
-      _cachedClient = client;
-      _cachedAccount = account;
-
-      _loginCompleter!.complete((client, account));
+      _cachedAccount = await _googleSignIn.attemptLightweightAuthentication();
     } catch (e) {
-      _loginCompleter!.completeError(e);
-      rethrow;
-    } finally {
-      _loginCompleter = null;
+      if (kDebugMode) print("Silent auth failed: $e");
     }
 
+    // 3. If no account found, return null (User must explicitly login)
+    if (_cachedAccount == null) {
+      return null;
+    }
+
+    // 4. Create the authenticated client
+    _cachedClient = _WebGoogleHttpClient(_cachedAccount!);
     return _cachedClient;
-  }
-
-  // ================== New Entry Point (for getting user info) ==================
-  Future<(http.Client?, GoogleSignInAccount?)>
-  getAuthenticatedClientAndAccount() async {
-    await getAuthenticatedClient(); // Ensures login happens if needed
-
-    return (_cachedClient, _cachedAccount);
   }
 
   // ================== Sign Out ==================
   Future<void> signOut() async {
     try {
-      if (Platform.isMacOS) {
-        await GoogleSignIn.instance.signOut();
-        if (kDebugMode) print("MacOS User Signed Out");
-      }
-
-      _cachedClient?.close();
-    } catch (e) {
-      if (kDebugMode) print("SignOut Error: $e");
-    } finally {
+      await _googleSignIn.signOut();
       _cachedClient = null;
       _cachedAccount = null;
-      _loginCompleter = null;
-      if (kDebugMode) print("Local Session Cleared");
+      if (kDebugMode) print("User Signed Out from Google");
+    } catch (e) {
+      if (kDebugMode) print("SignOut Error: $e");
     }
   }
 
-  // ================== macOS Logic (Native v7+) ==================
-  Future<(http.Client, GoogleSignInAccount)> _signInMacOS() async {
+  // ================== Helpers ==================
+  /// This is used by AuthRemoteDataSource to perform the explicit sign-in
+  Future<GoogleSignInAccount?> signIn() async {
     try {
-      final googleSignIn = GoogleSignIn.instance;
+      // In v7, 'authenticate' replaces 'signIn'
+      // We pass scopeHint to suggest getting permissions upfront
+      final account = await _googleSignIn.authenticate(scopeHint: _scopes);
 
-      await googleSignIn.initialize(clientId: dotenv.env['AppleClientId']);
+      _cachedAccount = account;
+      _cachedClient = _WebGoogleHttpClient(account);
 
-      final account = await googleSignIn.authenticate(scopeHint: _scopes);
-
-      if (kDebugMode) {
-        print("✅ Sign In Success: ${account.email}");
-      }
-
-      return (_MacGoogleHttpClient(account), account);
+      return account;
     } catch (e) {
-      if (kDebugMode) print("MacOS Sign In Error: $e");
-      rethrow;
-    }
-  }
-
-  // ================== Windows Logic (Browser Flow) ==================
-  Future<http.Client?> _signInWindows() async {
-    try {
-      final clientId = ClientId(
-        dotenv.env['WindowsClientId']!,
-        dotenv.env['WindowsClientSecret'],
-      );
-
-      final client = await clientViaUserConsent(clientId, _scopes, (url) async {
-        final uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri);
-        } else {
-          if (kDebugMode) print("Please go to: $url");
-        }
-      });
-
-      return client;
-    } catch (e) {
-      if (kDebugMode) print("Windows Sign In Error: $e");
+      if (kDebugMode) print("Sign In Error: $e");
+      // If the user cancels the popup, it might throw an error or return null depending on platform
       return null;
-    }
-  }
-
-  // ================== Silent Sign In (Refresh Token) ==================
-  Future<(http.Client?, GoogleSignInAccount?)> signInSilently(
-    CredentialsModel? credentialsModel,
-  ) async {
-    if (_cachedClient != null) {
-      return (_cachedClient, _cachedAccount);
-    }
-
-    try {
-      http.Client? client;
-      GoogleSignInAccount? account;
-
-      if (Platform.isMacOS) {
-        // macOS uses GoogleSignIn for silent login
-        final googleSignIn = GoogleSignIn.instance;
-        // Ensure initialized with client ID
-        await googleSignIn.initialize(clientId: dotenv.env['AppleClientId']);
-
-        account = await googleSignIn.attemptLightweightAuthentication();
-        if (account != null) {
-          client = _MacGoogleHttpClient(account);
-        }
-      } else if (Platform.isWindows && credentialsModel != null) {
-        // Windows uses stored credentials to recreate the client
-        final clientId = ClientId(
-          dotenv.env['WindowsClientId']!,
-          dotenv.env['WindowsClientSecret'],
-        );
-
-        final credentials = credentialsModel.toAccessCredentials();
-
-        // Check if credentials are valid or can be refreshed
-        if (credentials.accessToken.hasExpired &&
-            credentials.refreshToken == null) {
-          throw Exception("Token expired and no refresh token available");
-        }
-
-        client = autoRefreshingClient(clientId, credentials, http.Client());
-      }
-
-      if (client != null) {
-        _cachedClient = client;
-        _cachedAccount = account;
-        if (kDebugMode) print("✅ Silent Sign In Success");
-      }
-
-      return (client, account);
-    } catch (e) {
-      if (kDebugMode) print("Silent Sign In Error: $e");
-      return (null, null);
     }
   }
 }
 
-// ================== Helper for Mac (Handles Refresh v7 Style) ==================
-class _MacGoogleHttpClient extends http.BaseClient {
+// ================== Validates & Injects Headers ==================
+class _WebGoogleHttpClient extends http.BaseClient {
   final GoogleSignInAccount _account;
   final http.Client _inner = http.Client();
 
+  // Define scopes again here or make them public in the parent class
   static const List<String> _scopes = [
+    'email',
+    'profile',
+    'openid',
     SheetsApi.spreadsheetsScope,
     GmailApi.gmailSendScope,
+    GmailApi.gmailReadonlyScope,
   ];
 
-  _MacGoogleHttpClient(this._account);
+  _WebGoogleHttpClient(this._account);
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    // In v7, we access 'authorizationClient' from the account,
+    // then ask for 'authorizationHeaders' for specific scopes.
+    // This method handles token refresh automatically.
     final Map<String, String>? authHeaders = await _account.authorizationClient
         .authorizationHeaders(_scopes);
 
     if (authHeaders != null) {
       request.headers.addAll(authHeaders);
     } else {
-      throw Exception('Failed to get authorization headers');
+      // Ideally, handle this case (e.g., throw exception to trigger re-login)
+      if (kDebugMode) print("Failed to get fresh auth headers");
     }
 
     return _inner.send(request);
