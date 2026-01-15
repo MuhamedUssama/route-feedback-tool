@@ -32,7 +32,7 @@ class MainLayoutScreen extends StatelessWidget {
           ),
           Expanded(
             child: Container(
-              margin: const EdgeInsets.only(top: 8),
+              margin: const EdgeInsets.only(top: 24),
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: const BorderRadius.only(

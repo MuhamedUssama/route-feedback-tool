@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/errors/auth_error_type.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/google_auth_client.dart';
@@ -25,35 +24,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<(UserModel, CredentialsModel?)> loginWithGoogle() async {
     try {
-      // 1. Trigger Google Sign-In
-      final GoogleSignInAccount? googleUser = await _googleAuthClient.signIn();
+      final GoogleAuthProvider authProvider = GoogleAuthProvider();
 
-      if (googleUser == null) {
-        throw const GoogleAuthException(
-          'Sign-In cancelled by user',
-          AuthErrorType.cancelled,
-        );
+      for (final scope in GoogleAuthClient.scopes) {
+        authProvider.addScope(scope);
       }
 
-      // 2. Obtain the auth details
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-
-      // 3. Create a new credential
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: null,
-        idToken: googleAuth.idToken,
+      final UserCredential userCredential = await _firebaseAuth.signInWithPopup(
+        authProvider,
       );
-
-      // 4. Sign in to Firebase with the credential
-      final UserCredential userCredential = await _firebaseAuth
-          .signInWithCredential(credential);
 
       final user = userCredential.user;
       if (user == null) {
         throw const ServerException('Firebase Sign-In failed: User is null');
       }
 
-      // 5. Map to UserModel
+      await _googleAuthClient.getAuthenticatedClient();
+
       final userModel = UserModel(
         id: user.uid,
         email: user.email ?? '',

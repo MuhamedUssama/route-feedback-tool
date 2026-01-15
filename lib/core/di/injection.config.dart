@@ -22,8 +22,6 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart'
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
 import '../../features/auth/domain/usecases/check_auto_login_usecase.dart'
     as _i863;
-import '../../features/auth/domain/usecases/get_cached_user_usecase.dart'
-    as _i389;
 import '../../features/auth/domain/usecases/login_with_google_usecase.dart'
     as _i57;
 import '../../features/auth/domain/usecases/logout_usecase.dart' as _i48;
@@ -150,9 +148,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i107.AuthRemoteDataSource>(),
         gh<_i852.AuthLocalDataSource>(),
       ),
-    );
-    gh.lazySingleton<_i389.GetCachedUserUseCase>(
-      () => _i389.GetCachedUserUseCase(gh<_i787.AuthRepository>()),
     );
     gh.lazySingleton<_i57.LoginWithGoogleUseCase>(
       () => _i57.LoginWithGoogleUseCase(gh<_i787.AuthRepository>()),

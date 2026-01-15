@@ -9,7 +9,7 @@ import 'package:injectable/injectable.dart';
 
 @lazySingleton
 class GoogleAuthClient {
-  static const List<String> _scopes = [
+  static const List<String> scopes = [
     'email',
     'profile',
     'openid',
@@ -72,7 +72,7 @@ class GoogleAuthClient {
     try {
       // In v7, 'authenticate' replaces 'signIn'
       // We pass scopeHint to suggest getting permissions upfront
-      final account = await _googleSignIn.authenticate(scopeHint: _scopes);
+      final account = await _googleSignIn.authenticate(scopeHint: scopes);
 
       _cachedAccount = account;
       _cachedClient = _WebGoogleHttpClient(account);

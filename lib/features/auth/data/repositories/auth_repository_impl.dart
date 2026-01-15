@@ -19,11 +19,9 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, UserEntity>> loginWithGoogle() async {
     try {
-      final (user, credentials) = await _remoteDataSource.loginWithGoogle();
+      final (user, _) = await _remoteDataSource.loginWithGoogle();
       await _localDataSource.cacheUser(user);
-      if (credentials != null) {
-        await _localDataSource.cacheCredentials(credentials);
-      }
+
       return Right(user);
     } on GoogleAuthException catch (e) {
       return Left(Failure.auth(e.message, e.type));
@@ -77,9 +75,7 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      final credentials = await _localDataSource.getCachedCredentials();
-
-      final user = await _remoteDataSource.loginSilently(credentials);
+      final user = await _remoteDataSource.loginSilently(null);
 
       if (user != null) {
         await _localDataSource.cacheUser(user);
