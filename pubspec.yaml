@@ -36,7 +36,6 @@ dependencies:
   pdf: ^3.11.3
   printing: ^5.14.2
   file_picker: ^10.3.8
-  auto_updater: ^1.0.0
   window_manager: ^0.5.1
   flutter_launcher_icons: ^0.14.4
   html_unescape: ^2.0.0
