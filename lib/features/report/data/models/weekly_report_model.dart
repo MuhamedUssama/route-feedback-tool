@@ -66,6 +66,7 @@ class GroupReportDto {
 
 class LogisticsInfoDto {
   bool visited = true;
+  DateTime? visitDate;
   String? exceptionReason;
   TimeOfDay? arrivalTime;
   TimeOfDay? leavingTime;
@@ -74,7 +75,7 @@ class LogisticsInfoDto {
 
   bool get isValid {
     if (visited) {
-      return arrivalTime != null && leavingTime != null;
+      return visitDate != null && arrivalTime != null && leavingTime != null;
     } else {
       return exceptionReason != null && exceptionReason!.isNotEmpty;
     }
@@ -137,6 +138,7 @@ class GroupReportModel {
 class LogisticsInfoModel {
   final String groupName;
   final bool visited;
+  final DateTime? visitDate;
   final String? exceptionReason;
   final TimeOfDay? arrivalTime;
   final TimeOfDay? leavingTime;
@@ -144,6 +146,7 @@ class LogisticsInfoModel {
   LogisticsInfoModel({
     required this.groupName,
     required this.visited,
+    this.visitDate,
     this.exceptionReason,
     this.arrivalTime,
     this.leavingTime,
