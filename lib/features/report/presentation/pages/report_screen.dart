@@ -180,6 +180,7 @@ class _ReportScreenViewState extends State<_ReportScreenView> {
               return LogisticsInfoModel(
                 groupName: g.groupName,
                 visited: lDto.visited,
+                visitDate: lDto.visitDate,
                 exceptionReason: lDto.exceptionReason,
                 arrivalTime: lDto.arrivalTime,
                 leavingTime: lDto.leavingTime,

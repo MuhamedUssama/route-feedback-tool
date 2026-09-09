@@ -364,12 +364,15 @@ class PdfGeneratorService {
       cellAlignment: pw.Alignment.center,
       cellStyle: const pw.TextStyle(fontSize: 10, color: _textGrey),
       cellPadding: const pw.EdgeInsets.all(5),
-      headers: ['Group', 'Attended', 'Arrival', 'Leave', 'Exception'],
+      headers: ['Group', 'Attended', 'Date', 'Arrival', 'Leave', 'Exception'],
       data: report.logistics
           .map(
             (info) => [
               info.groupName,
               info.visited ? 'Yes' : 'No',
+              info.visited && info.visitDate != null
+                  ? DateFormat('MMM dd, yyyy').format(info.visitDate!)
+                  : '-',
               _formatTime(info.arrivalTime),
               _formatTime(info.leavingTime),
               info.exceptionReason ?? '-',
