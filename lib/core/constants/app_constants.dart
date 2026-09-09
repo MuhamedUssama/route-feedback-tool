@@ -12,9 +12,17 @@ class AppConstants {
   static const List<String> kTracks = [
     'Flutter',
     'Frontend',
-    'Backend',
+    'Backend (NodeJs)',
+    'Backend (PHP)',
+    'Backend (.NET)',
     'Fullstack',
     'UI/UX',
+    'Data Science',
+    'AI',
+    'Cyber Security',
+    'QA',
+    'DevOps',
+    'Data Engineering',
   ];
   static const List<String> kBranches = [
     'Maadi',
